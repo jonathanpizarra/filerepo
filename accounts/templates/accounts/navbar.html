@@ -1,0 +1,32 @@
+<div class="nav-container">
+        
+    <img src="{{ user.profile_image.url }}" alt="user profile img" width="90" height="90">
+    <br>
+
+    <p>Hello, {{user.username}} !</p>
+        
+        <a href="{% url 'accounts:profile' %}">visit profile</a>
+        <button id="logout-btn">Logout </button>
+        <a href="{% url 'file_manager:index' %}">File manager</a> 
+        <a href="{% url 'file_manager:archives' %}">Archives</a>
+        
+
+    {% if user.is_admin %}
+        <a href="{% url 'file_manager:admin_categories' %}">Categories</a>
+        <a href="{% url 'file_manager:admin_users' %}">Users</a>
+        <a href="{% url 'reports:index' %}">Reports</a>
+        
+    {% endif %}
+</div>
+
+
+<script>
+    const logoutBtn = document.querySelector("#logout-btn")
+    logoutBtn.addEventListener("click", function(){
+        let c = confirm("Are you sure you want to logout?")
+        if(c){
+            window.location.href = "{% url 'accounts:logout' %}"
+        }
+    })
+
+</script>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Users</title>
+    <style>
+        .nav-container{
+            height:90px;
+            width:100%;
+            display: flex;
+            flex-direction: row;
+            background-color: gray;
+
+        }
+        .user-edit-container, .user-new-container, .user-details-container{
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .user-edit-sub-container, .user-new-sub-container, .user-details-sub-container{
+            width:500px;
+            height:500px;
+            background-color: white;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    {% include './navbar.html' with user=user %}
+
+    <div class="users-container">
+        <button id="file-manager-btn">File Manager</button>
+        <button id="delete-user-btn">Delete/archive users</button>
+        <button id="add-new-user-btn">add new user</button>
+        <p><span>number of selected users: </span><span id="selected-users-count">0</span></p>
+        
+
+        <table border="1" id="user-table">
+            <tbody id="user-tbody">
+            <tr>
+                <td><input type="checkbox" id="checkbox-all"></td>
+                <td>Username</td>
+                <td>Firstname</td>
+                <td>Lastname</td>
+                <td>Email</td>
+                <td>Actions</td>
+            </tr>
+            {% if users.count == 0 %}
+                <tr id="no-users">
+                    <td colspan="6">no users available</td>
+                </tr>
+            {% else %}
+                {% for u in users %}
+                    <tr class="row-user" id="user-id-{{u.id}}">
+                        <td class='col-checkbox'><input type="checkbox" name="user-checkbox" data-pk="{{u.id}}"></td>        
+                        <td class="col-username" data-user-id="{{u.id}}" data-profile-path="{{u.profile_image.url}}">{{u.username}}</td>
+                        <td class="col-firstname">{{u.first_name}}</td>
+                        <td class="col-lastname">{{u.last_name}}</td>
+                        <td class="col-email">{{u.email}}</td>
+                        <td class="col-actions">
+                            <button class="edit-user-btn" data-pk="{{u.id}}">Edit</button>
+                            <button class="details-user-btn" data-pk="{{u.id}}">detAils</button>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+
+
+    <div class="user-edit-container">
+        <div class="user-edit-sub-container">
+            <h2>User profile</h2>
+            {% csrf_token %}
+            <input type="hidden" id="edit-user-id" data-index="-1">
+
+            <img src="" id="user-profile-image" alt="user profile image" width="150" height="150"><br>
+
+            <input type="file" id="edit-user-profile-image"><br>
+
+            <label for="edit-user-username">username</label>
+            <input type="text" id="edit-user-username"><br>
+
+            <label for="edit-user-firstname">firstname</label>
+            <input type="text" id="edit-user-firstname"><br>
+
+            <label for="edit-user-lastname">lastname</label>
+            <input type="text" id="edit-user-lastname"><br>
+
+            <label for="edit-user-email">email</label>
+            <input type="email" id="edit-user-email"><br>
+            
+            <button id="edit-user-cancel-btn">cancel</button>
+            <button id="edit-user-save-btn">Save changes</button>
+
+        </div>
+
+    </div>
+
+    <div class="user-new-container">
+        <div class="user-new-sub-container">
+            <h2>new user profile</h2>
+            <input type="hidden" id="new-user-id" data-index="-1">
+
+            <img src="/media/profile_images/default_profile_img.png" id="new-user-profile-image" alt="new user profile image" width="150" height="150"><br>
+
+            <input type="file" id="new-user-profile-image-input"><br>
+
+            <label for="new-user-username">username</label>
+            <input type="text" id="new-user-username"><br>
+
+            <label for="new-user-firstname">firstname</label>
+            <input type="text" id="new-user-firstname"><br>
+
+            <label for="new-user-lastname">lastname</label>
+            <input type="text" id="new-user-lastname"><br>
+
+            <label for="new-user-email">email</label>
+            <input type="email" id="new-user-email"><br>
+
+            <label for="new-user-password">password</label>
+            <input type="password" id="new-user-password"><br>
+
+            <label for="new-user-confirm-password">confirm password</label>
+            <input type="password" id="new-user-confirm-password"><br>
+            
+            <button id="new-user-cancel-btn">cancel</button>
+            <button id="new-user-save-btn">Save new user</button>
+
+        </div>
+
+    </div>
+
+    <div class="user-details-container">
+        <div class="user-details-sub-container">
+            <h2>user details</h2>
+            <img src="/media/profile_images/default_profile_img.png" id="details-profile-img" alt="user profile" width="150" height="150">
+            <p>
+                <span>username:</span>
+                <span id="details-username"></span>
+            </p>
+            <p>
+                <span>firstname:</span>
+                <span id="details-firstname"></span>
+            </p>
+            <p>
+                <span>lastname:</span>
+                <span id="details-lastname"></span>
+            </p>
+            <p>
+                <span>email:</span>
+                <span id="details-email"></span>
+            </p>
+            <p>
+                <span>date created:</span>
+                <span id="details-date-created"></span>
+            </p>
+            <p>
+                <span>number of files uploaded:</span>
+                <span id="details-upload-count"></span>
+            </p>
+            <p>
+                <span>last profile update:</span>
+                <span id="details-last-update"></span>
+            </p>
+            
+            <button id="details-user-close-btn">close</button>
+        </div>
+    </div>
+
+    <script>
+
+// ========================================================
+        let selected_users_count = 0;
+// ========================================================
+
+        const addNewUserBtn = document.querySelector("#new-user-save-btn")
+        addNewUserBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const username = document.querySelector("#new-user-username").value.trim();
+            const firstname = document.querySelector("#new-user-firstname").value.trim();
+            const lastname = document.querySelector("#new-user-lastname").value.trim();
+            const email = document.querySelector("#new-user-email").value.trim();
+            const password1 = document.querySelector("#new-user-password").value.trim();
+            const password2 = document.querySelector("#new-user-confirm-password").value.trim();
+            const imgInput = document.querySelector("#new-user-profile-image-input");
+
+            if(username === "" || firstname === "" || lastname === "" || email === "" || password1 === "" || password2 === ""){
+                alert("fill out empty fields");
+                return;
+            }
+            if(password1 !== password2){
+                alert("passwords don't match");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', imgInput.files[0])
+            formData.append('username', username)
+            formData.append('firstname', firstname)
+            formData.append('lastname', lastname)
+            formData.append('email', email)
+            formData.append('password', password1)
+
+            fetch("{% url 'file_manager:admin_add_user' %}", {
+                method: 'POST',
+                headers: {
+                'X-CSRFToken': csrftoken
+                }, 
+                body: formData
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                console.log(res)
+                console.log(JSON.parse(res.data.user)[0])
+                
+                if(res.result == 'success'){
+                    document.querySelector(".user-new-container").style.display = 'none'
+                    document.querySelector("#new-user-profile-image").setAttribute('src', '/media/profile_images/default_profile_img.png')
+                    document.querySelector("#new-user-profile-image-input").value = ''
+
+                    user = JSON.parse(res.data.user)[0]
+                    let row = document.createElement('tr')
+                    let id = user.pk
+                    let count = res.data.count
+                    let tbody = document.querySelector("#user-tbody")
+                    row.setAttribute('class', 'row-user')
+                    row.setAttribute('id', '')
+                    let rowData = "<td class='col-checkbox'><input type='checkbox' name='user-checkbox' data-pk='" + id + "'></td>" +        
+                        "<td class='col-username' data-user-id='" + id + "' data-profile-path='" + user.fields.profile_image + "'>" + user.fields.username + "</td>" +
+                        "<td class='col-firstname'>" + user.fields.first_name + "</td>" +
+                        "<td class='col-lastname'>" + user.fields.last_name + "</td>" +
+                        "<td class='col-email'>" + user.fields.email + "</td>" +
+                        "<td class='col-actions'>" +
+                            "<button class='edit-user-btn' data-pk='" + id + "'>Edit</button>" +
+                            "<button class='details-user-btn' data-pk='" + id + "'>detAils</button>" +
+                        "</td>"
+
+                    row.innerHTML = rowData
+                    tbody.insertBefore(row, tbody.children[1])
+
+                    if(count == 1){
+                        document.querySelector("#no-users").remove()
+                    }
+                    //alert('success adding new user')
+                }else{
+                    
+                    alert(res.message)
+                }
+            })
+            .catch(err=>console.log(err))
+        })
+
+        const newUserBtn = document.querySelector("#add-new-user-btn")
+        newUserBtn.addEventListener("click",function(){
+            document.querySelector(".user-new-container").style.display = 'flex'
+        })
+
+        const cancelNewUserBtn = document.querySelector("#new-user-cancel-btn")
+        cancelNewUserBtn.addEventListener("click", function(){
+            document.querySelector(".user-new-container").style.display = 'none'
+        })
+
+        const deleteBtn = document.querySelector("#delete-user-btn")
+        deleteBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let checkboxes = document.querySelectorAll("[name=user-checkbox]:checked")
+            let user_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+            
+            console.log(user_ids)
+
+            if(user_ids.length == 0){
+                alert("select a user to delete/archive")
+                return
+            }
+            let conf = confirm("Are you sure you want to delete/archive users?")
+            
+            if(conf){
+                fetch("{% url 'file_manager:admin_delete_selected_users' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        user_ids: user_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        let count = res.data.count - 1
+                        for(let i=0; i<user_ids.length; i++){
+                            document.querySelector("#user-id-" + user_ids[i]).remove();
+                        }
+
+                        if(count == 0){
+                            let row = document.createElement("tr")
+                            row.setAttribute('id', 'no-users')
+                            row.innerHTML = "<td colspan='6'>no users available</td>"
+                            document.querySelector("#user-tbody").appendChild(row)
+                        }
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+            
+
+        })
+
+        function detailsBtnEvent(e){
+            let id = e.target.getAttribute('data-pk')
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'file_manager:admin_get_user_details' %}",{
+                method: 'POST',
+                headers:{
+                    'X-CSRFToken': csrftoken,
+                },
+                body:JSON.stringify({
+                    user_id: id
+                })
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                console.log(res)
+                console.log(JSON.parse(res.data.user)[0])
+                const user = JSON.parse(res.data.user)[0]
+                const uploadcount = res.data.uploadcount
+                
+                if(res.result == "success"){   
+                    document.querySelector("#details-profile-img").setAttribute('src',"/media/" + user.fields.profile_image)  
+                    document.querySelector("#details-username").textContent = user.fields.username
+                    document.querySelector("#details-firstname").textContent = user.fields.first_name
+                    document.querySelector("#details-lastname").textContent = user.fields.last_name
+                    document.querySelector("#details-email").textContent = user.fields.email
+                    document.querySelector("#details-date-created").textContent = user.fields.creation_date
+                    document.querySelector("#details-last-update").textContent = user.fields.last_update
+                    document.querySelector("#details-upload-count").textContent = res.data.count
+
+                    document.querySelector(".user-details-container").style.display = 'flex'
+                }
+            })
+            .catch(err=>console.log(err))
+        }
+
+        const detailsBtns = document.querySelectorAll(".details-user-btn")
+        for(let i=0; i<detailsBtns.length; i++){
+            detailsBtns[i].addEventListener("click", function(e){
+                detailsBtnEvent(e)
+            })
+        }
+
+        const closeDetailsBtn = document.querySelector('#details-user-close-btn')
+        closeDetailsBtn.addEventListener("click", function(){
+            document.querySelector('.user-details-container').style.display = 'none'
+            document.querySelector("#details-profile-img").setAttribute('src', '/media/profile_images/default_profile_img.png')
+        })
+
+        const saveBtn = document.querySelector("#edit-user-save-btn")
+        saveBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const username = document.querySelector("#edit-user-username").value.trim();
+            const firstname = document.querySelector("#edit-user-firstname").value.trim();
+            const lastname = document.querySelector("#edit-user-lastname").value.trim();
+            const email = document.querySelector("#edit-user-email").value.trim();
+            const imgInput = document.querySelector("#edit-user-profile-image");
+            const user_id = document.querySelector("#edit-user-id").getAttribute('data-user-id')
+            const index = document.querySelector("#edit-user-id").getAttribute('data-index')
+
+            const formData = new FormData();
+            formData.append('file', imgInput.files[0])
+            formData.append('username', username)
+            formData.append('firstname', firstname)
+            formData.append('lastname', lastname)
+            formData.append('email', email)
+            formData.append('user_id', user_id)
+
+            fetch("{% url 'file_manager:admin_save_profile_changes' %}", {
+                method: 'POST',
+                headers: {
+                'X-CSRFToken': csrftoken,
+                },
+                body: formData
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                if(res.result == "success"){
+                    const newImage = res.data.path;
+                    document.querySelector(".user-edit-container").style.display = 'none'
+                    document.querySelectorAll('.col-username')[index].textContent = username
+                    document.querySelectorAll('.col-firstname')[index].textContent = firstname
+                    document.querySelectorAll('.col-lastname')[index].textContent = lastname
+                    document.querySelectorAll('.col-email')[index].textContent = email
+                    document.querySelectorAll(".col-username")[index].setAttribute("data-profile-path", newImage)
+                    alert(res.message)
+                }else{
+                    alert("error: " + res.message)
+                }
+            })
+            .catch(err=>console.log(err))
+        })
+
+        const editBtns = document.querySelectorAll(".edit-user-btn");
+        for(let i=0; i<editBtns.length; i++){
+            editBtns[i].addEventListener("click", function(){
+
+                let path = document.querySelectorAll(".col-username")[i].getAttribute("data-profile-path")
+                let username = document.querySelectorAll(".col-username")[i].textContent
+                let firstname = document.querySelectorAll(".col-firstname")[i].textContent
+                let lastname = document.querySelectorAll(".col-lastname")[i].textContent
+                let email = document.querySelectorAll(".col-email")[i].textContent
+                let user_id = document.querySelectorAll(".col-username")[i].getAttribute('data-user-id')
+
+                document.querySelector(".user-edit-container").style.display = 'flex'
+            
+                 document.querySelector("#edit-user-profile-image").value = ''
+                document.querySelector("#user-profile-image").setAttribute("src", path)
+                document.querySelector("#edit-user-username").value = username
+                document.querySelector("#edit-user-id").setAttribute('data-user-id', user_id)
+                document.querySelector("#edit-user-id").setAttribute('data-index', i)
+                document.querySelector("#edit-user-firstname").value = firstname
+                document.querySelector("#edit-user-lastname").value = lastname
+                document.querySelector("#edit-user-email").value = email
+
+
+            })
+        }
+
+        const checkAll = document.querySelector("#checkbox-all")
+        checkAll.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=user-checkbox]")
+                document.querySelector("#selected-users-count").textContent = checkboxes.length
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=user-checkbox]")
+                document.querySelector("#selected-users-count").textContent = 0
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        let checkboxes = document.querySelectorAll("[name=user-checkbox]")
+        for(let i=0; i<checkboxes.length; i++){
+            checkboxes[i].addEventListener("click", function(e){
+                checkboxEvent(e)
+            })
+        }
+
+        function checkboxEvent(e){
+            if(e.target.checked){
+                selected_users_count++
+            }else{
+                selected_users_count--
+            }
+            document.querySelector('#selected-users-count').textContent = selected_users_count
+        }
+
+        const cancelBtn = document.querySelector("#edit-user-cancel-btn")
+        cancelBtn.addEventListener("click", function(){
+            document.querySelector(".user-edit-container").style.display = 'none'
+        })
+
+        const fileManagerBtn = document.querySelector("#file-manager-btn")
+        fileManagerBtn.addEventListener("click", function(){
+            window.location.href = "{% url 'file_manager:index' %}"
+        })
+
+        const profilePic = document.querySelector("#edit-user-profile-image");
+        profilePic.addEventListener("change", function(){
+            if (profilePic.files && profilePic.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.querySelector("#user-profile-image").setAttribute('src', e.target.result)
+                }
+                reader.readAsDataURL(profilePic.files[0]);
+            }
+        })
+
+        const newProfilePic = document.querySelector("#new-user-profile-image-input");
+        newProfilePic.addEventListener("change", function(){
+            if (newProfilePic.files && newProfilePic.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.querySelector("#new-user-profile-image").setAttribute('src', e.target.result)
+                }
+                reader.readAsDataURL(newProfilePic.files[0]);
+            }
+        })
+
+
+    </script>
+</body>
+</html>

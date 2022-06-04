@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archives</title>
+
+    <style>
+        #file-archives-container, #user-archives-container, #category-archives-container{
+            border:1px solid gray;
+            margin:1rem;
+        }
+
+        .nav-container{
+            height:90px;
+            width:100%;
+            display: flex;
+            flex-direction: row;
+            background-color: gray;
+
+        }
+    </style>
+</head>
+<body>
+    {% include './navbar.html' with user=user %}
+
+    <h2>Archives</h2>
+    {% csrf_token %}
+
+    {% if user.is_admin %}
+        <div id="user-archives-container">
+            <h4>Archvied users</h4>
+            <button id="restore-selected-users-btn">restore selecteed users </button>
+            <p><span>number of selected users: </span><span id="selected-users-count">0</span></p>
+
+            <table id="user-archives-table" border="">
+                <tbody id="user-archives-tbody">
+                    <tr>
+                        <td><input type="checkbox" id="checkbox-all-users"></td>
+                        <td>Username</td>
+                        <td>Firstname</td>
+                        <td>Lastname</td>
+                        <td>Email</td>
+                        <td>Actions</td>
+                    </tr>
+    
+                    {% if user_archives.count == 0 %}
+                        <tr id="no-files">
+                            <td colspan="6">no archived files</td>
+                        </tr>
+                    {% else %}
+                        {% for u in user_archives %}
+                            <tr class="row-user" id="user-id-{{f.id}}">
+                                <td class='col-checkbox'><input type="checkbox" name="user-checkbox" data-pk="{{u.id}}"></td>
+                                <td class="col-username">{{u.username}}</td>
+                                <td class="col-firstname">{{u.first_name}}</td>
+                                <td class="col-lastname">{{u.last_name}}</td>
+                                <td class="col-email">{{u.email}}</td>
+                                <td class='col-user-actions'>
+                                    <button class="restore-user-btn" data-pk="{{u.id}}">Restore</button>
+                                </td>
+                            </tr>
+    
+                        {% endfor %}
+                    {% endif %}
+    
+                </tbody>
+            </table>
+        </div>
+
+        <div id="category-archives-container">
+            <h4>Archvied categories</h4>
+            <button id="restore-selected-categories-btn">restore selecteed categories </button>
+            <p><span>number of selected categories: </span><span id="selected-categories-count">0</span></p>
+
+            <table id="category-archives-table" border="">
+                <tbody id="category-archives-tbody">
+                    <tr>
+                        <td><input type="checkbox" id="checkbox-all-categories"></td>
+                        <td>Name</td>
+                        <td>Description</td>
+                        <td>Actions</td>
+                    </tr>
+    
+                    {% if category_archives.count == 0 %}
+                        <tr id="no-categories">
+                            <td colspan="6">no archived categories</td>
+                        </tr>
+                    {% else %}
+                        {% for u in category_archives %}
+                            <tr class="row-category" id="category-id-{{f.id}}">
+                                <td class='col-checkbox'><input type="checkbox" name="category-checkbox" data-pk="{{u.id}}"></td>
+                                <td class="col-category-name">{{u.name}}</td>
+                                <td class="col-description">{{u.description}}</td>
+                                <td class='col-category-actions'>
+                                    <button class="restore-category-btn" data-pk="{{u.id}}">Restore</button>
+                                </td>
+                            </tr>
+    
+                        {% endfor %}
+                    {% endif %}
+    
+                </tbody>
+            </table>
+        </div>
+
+
+
+    {% endif %}
+
+
+    <div id="file-archives-container">
+        <h4>Archived files</h4>
+        <button id="restore-selected-files-btn">restore selecteed files </button>
+        <p><span>number of selected files: </span><span id="selected-files-count">0</span></p>
+
+        <table id="file-archives-table" border="">
+            <tbody id="file-archives-tbody">
+                <tr>
+                    <td><input type="checkbox" id="checkbox-all-files"></td>
+                    <td>Filename</td>
+                    <td>Size</td>
+                    <td>Category</td>
+                    <td>Uploader</td>
+                    <td>Upload Date</td>
+                    <td>Actions</td>
+                </tr>
+
+                {% if file_archives.count == 0 %}
+                    <tr id="no-files">
+                        <td colspan="6">no archived files</td>
+                    </tr>
+                {% else %}
+                    {% for f in file_archives %}
+                        <tr class="row-file" id="file-id-{{f.id}}">
+                            <td class='col-checkbox'><input type="checkbox" name="file-checkbox" data-pk="{{f.id}}"></td>
+                            <td class="col-filename">{{f.get_filename}}</td>
+                            <td class="col-filesize">{{f.uploaded_file.size|filesizeformat}}</td>
+                            <td class="col-category">{{f.category.name}}</td>
+                            <td class="col-uploader">{{f.uploader.username}}</td>
+                            <td class="col-upload-date">{{f.upload_date|date:"m/d/Y, H:i:s"}}</td>
+                            <td class='col-file-actions'>
+                                <button class="restore-file-btn" data-pk="{{f.id}}">Restore</button>
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+                {% endif %}
+
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+
+// ===========================================================
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value
+        let selected_files_count = 0
+        let selected_users_count = 0
+        let selected_categories_count = 0
+        let files = []
+        let users = []
+        let categories = []
+
+// ============================================================
+
+{% if user.is_admin %}
+
+// ================== START OF CATEGORY ARCHIVES ===========================================
+        const restoreCategoriesBtn = document.querySelector("#restore-selected-categories-btn")
+        restoreCategoriesBtn.addEventListener("click", function(){     
+            let checkboxes = document.querySelectorAll("[name=category-checkbox]:checked")
+            let category_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+
+            if(category_ids.length == 0){
+                alert('no category/categories selected')
+                return
+            }
+
+            let conf = confirm("Are you sure you want to restore selected category/categories? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_categories' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        category_ids: category_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        categories = res.data.archived_categories
+                        document.querySelector("#checkbox-all-categories").checked = false;
+                        populateCategoriesTable()
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        })
+
+        function populateCategoriesTable(){
+            let rows = document.querySelectorAll(".row-category")
+            for(let i=0; i<rows.length; i++){
+                rows[i].remove()
+            }
+
+            if(categories.length == 0){
+                let row = document.createElement("tr")
+                row.setAttribute('id', 'no-categories')
+                row.innerHTML = "<td colspan='6'>no archived categories</td>"
+                document.querySelector("#category-archives-tbody").appendChild(row)
+                return 
+            }
+
+            let tbody = document.querySelector("#category-archives-tbody")
+            for(let i=0; i<categories.length; i++){
+
+                let id = categories[i].category_id
+                let name = categories[i].name
+                let description = categories[i].description
+
+                let row = document.createElement('tr')
+                row.setAttribute('class', 'row-category')
+                row.setAttribute('id', 'category-id-' + id)
+                let rowData = "<td class='col-checkbox'><input type='checkbox' name='category-checkbox' data-pk='" + id + "'></td>" +
+                "<td class='col-category-name'>" + name + "</td>" +
+                "<td class='col-description'>" + description + "</td>" +
+                "<td class='col-category-actions'>" + 
+                    "<button class='restore-category-btn' data-pk='" + id + "'>Restore</button> " + 
+                "</td>"
+                row.innerHTML = rowData
+                tbody.appendChild(row)
+
+                row.querySelector('.restore-category-btn').addEventListener('click', function(e){
+                    console.log('clicked restore btn')
+                    restoreCategoriesBtnsEvent(e)
+                })
+
+
+            }
+
+
+        }
+
+        function restoreCategoriesBtnsEvent(e){
+            let id = e.target.getAttribute('data-pk')
+            let category_ids = [id]
+
+            let conf = confirm("Are you sure you want to restore selected category/categories? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_categories' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        category_ids: category_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        categories = res.data.archived_categories
+                        document.querySelector("#checkbox-all-categories").checked = false;
+                        populateCategoriesTable()
+                        
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        }
+
+        let restoreCategoriesBtns = document.querySelectorAll(".restore-category-btn")
+        for(let i=0; i<restoreCategoriesBtns.length; i++){
+            restoreCategoriesBtns[i].addEventListener('click', function(e){
+                restoreCategoriesBtnsEvent(e)
+            })
+        }
+
+        const checkAllCategories = document.querySelector("#checkbox-all-categories")
+        checkAllCategories.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=category-checkbox]")
+                document.querySelector('#selected-categories-count').textContent = checkboxes.length;
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=category-checkbox]")
+                document.querySelector('#selected-categories-count').textContent = 0
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        let categoryCheckboxes = document.querySelectorAll("[name=category-checkbox]")
+        for(let i=0; i<categoryCheckboxes.length; i++){
+            categoryCheckboxes[i].addEventListener("click", function(e){
+                categoryCheckboxEvent(e)
+            })
+        }
+
+        function categoryCheckboxEvent(e){
+            if(e.target.checked){
+                selected_categories_count++
+            }else{
+                selected_categories_count--
+            }
+            document.querySelector('#selected-users-count').textContent = selected_categories_count
+        }
+
+
+// ================== END OF CATEGORY ARCHIVES ===========================================
+
+
+
+// ================== START OF USER ARCHIVES ===========================================
+        const restoreUsersBtn = document.querySelector("#restore-selected-users-btn")
+        restoreUsersBtn.addEventListener("click", function(){     
+            let checkboxes = document.querySelectorAll("[name=user-checkbox]:checked")
+            let user_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+
+            if(user_ids.length == 0){
+                alert('no user/s selected')
+                return
+            }
+
+            let conf = confirm("Are you sure you want to restore selected user/s? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_users' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        user_ids: user_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        users = res.data.archived_users
+                        document.querySelector("#checkbox-all-users").checked = false;
+                        populateUsersTable()
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        })
+
+        function populateUsersTable(){
+            let rows = document.querySelectorAll(".row-user")
+            for(let i=0; i<rows.length; i++){
+                rows[i].remove()
+            }
+
+            if(users.length == 0){
+                let row = document.createElement("tr")
+                row.setAttribute('id', 'no-files')
+                row.innerHTML = "<td colspan='6'>no archived users</td>"
+                document.querySelector("#user-archives-tbody").appendChild(row)
+                return 
+            }
+
+            let tbody = document.querySelector("#user-archives-tbody")
+            for(let i=0; i<users.length; i++){
+
+                let id = users[i].user_id
+                let username = users[i].username
+                let firstname = users[i].firstname
+                let latname = users[i].lastname
+                let email = users[i].email
+
+                let row = document.createElement('tr')
+                row.setAttribute('class', 'row-user')
+                row.setAttribute('id', 'user-id-' + id)
+                let rowData = "<td class='col-checkbox'><input type='checkbox' name='user-checkbox' data-pk='" + id + "'></td>" +
+                "<td class='col-username'>" + username + "</td>" +
+                "<td class='col-firstname'>" + firstname + "</td>" +
+                "<td class='col-lastname'>" + lastname + "</td>" +
+                "<td class='col-email'>" + email + "</td>" +
+                "<td class='col-user-actions'>" + 
+                    "<button class='restore-user-btn' data-pk='" + id + "'>Restore</button> " + 
+                "</td>"
+                row.innerHTML = rowData
+                tbody.appendChild(row)
+
+                row.querySelector('.restore-user-btn').addEventListener('click', function(e){
+                    console.log('clicked restore btn')
+                    restoreUsersBtnsEvent(e)
+                })
+
+
+            }
+
+
+        }
+
+        function restoreUsersBtnsEvent(e){
+            let id = e.target.getAttribute('data-pk')
+            let user_ids = [id]
+
+            let conf = confirm("Are you sure you want to restore selected user/s? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_users' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        user_ids: user_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        users = res.data.archived_users
+                        document.querySelector("#checkbox-all-users").checked = false;
+                        populateUsersTable()
+                        
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        }
+
+        let restoreUsersBtns = document.querySelectorAll(".restore-user-btn")
+        for(let i=0; i<restoreUsersBtns.length; i++){
+            restoreUsersBtns[i].addEventListener('click', function(e){
+                restoreUsersBtnsEvent(e)
+            })
+        }
+
+        const checkAllUsers = document.querySelector("#checkbox-all-users")
+        checkAllUsers.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=user-checkbox]")
+                document.querySelector('#selected-users-count').textContent = checkboxes.length;
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=user-checkbox]")
+                document.querySelector('#selected-users-count').textContent = 0
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        let userCheckboxes = document.querySelectorAll("[name=user-checkbox]")
+        for(let i=0; i<userCheckboxes.length; i++){
+            userCheckboxes[i].addEventListener("click", function(e){
+                userCheckboxEvent(e)
+            })
+        }
+
+        function userCheckboxEvent(e){
+            if(e.target.checked){
+                selected_users_count++
+            }else{
+                selected_users_count--
+            }
+            document.querySelector('#selected-users-count').textContent = selected_users_count
+        }
+
+
+
+
+
+// ================== END OF USER ARCHIVES ===========================================
+
+{% endif %}
+
+
+
+
+// ================== START OF FILE ARCHIVES ===========================================
+        const restoreFilesBtn = document.querySelector("#restore-selected-files-btn")
+        restoreFilesBtn.addEventListener("click", function(){     
+            let checkboxes = document.querySelectorAll("[name=file-checkbox]:checked")
+            let file_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+
+            if(file_ids.length == 0){
+                alert('no file/s selected')
+                return
+            }
+
+            let conf = confirm("Are you sure you want to restore selected file/s? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_files' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        file_ids: file_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        files = res.data.archived_files
+                        document.querySelector("#checkbox-all-files").checked = false;
+                        populateFilesTable()
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        })
+
+        function populateFilesTable(){
+            let rows = document.querySelectorAll(".row-file")
+            for(let i=0; i<rows.length; i++){
+                rows[i].remove()
+            }
+
+            if(files.length == 0){
+                let row = document.createElement("tr")
+                row.setAttribute('id', 'no-files')
+                row.innerHTML = "<td colspan='7'>no archived files</td>"
+                document.querySelector("#file-archives-tbody").appendChild(row)
+                return 
+            }
+
+            let tbody = document.querySelector("#file-archives-tbody")
+            for(let i=0; i<files.length; i++){
+
+                let id = files[i].file_id
+                let filename = files[i].filename
+                let filesize = files[i].filesize
+                let category_name = files[i].category
+                let uploader_name = files[i].uploader
+                let upload_date = files[i].upload_date
+                let path = files[i].filepath
+
+                let row = document.createElement('tr')
+                row.setAttribute('class', 'row-file')
+                row.setAttribute('id', 'file-id-' + id)
+                let rowData = "<td class='col-checkbox'><input type='checkbox' name='file-checkbox' data-pk='" + id + "'></td>" +
+                "<td class='col-filename'>" + filename + "</td>" +
+                "<td class='col-filesize'>" + humanFileSize(filesize) + "</td>" +
+                "<td class='col-category'>" + category_name + "</td>" +
+                "<td class='col-uploader'>" + uploader_name + "</td>" +
+                "<td class='col-upload-date'>" + upload_date + "</td>" +
+                "<td class='col-file-actions'>" + 
+                    "<button class='restore-file-btn' data-pk='" + id + "'>Restore</button> " + 
+                "</td>"
+                row.innerHTML = rowData
+                tbody.appendChild(row)
+
+                row.querySelector('.restore-file-btn').addEventListener('click', function(e){
+                    console.log('clicked restore btn')
+                    restoreFilesBtnsEvent(e)
+                })
+
+
+            }
+
+
+        }
+
+        function restoreFilesBtnsEvent(e){
+            let id = e.target.getAttribute('data-pk')
+            let file_ids = [id]
+
+            let conf = confirm("Are you sure you want to restore selected file/s? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:restore_selected_files' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        file_ids: file_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        files = res.data.archived_files
+                        document.querySelector("#checkbox-all-files").checked = false;
+                        populateTable()
+                        
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        }
+
+        let restoreFilesBtns = document.querySelectorAll(".restore-file-btn")
+        for(let i=0; i<restoreFilesBtns.length; i++){
+            restoreFilesBtns[i].addEventListener('click', function(e){
+                restoreFilesBtnsEvent(e)
+            })
+        }
+
+        const checkAllFiles = document.querySelector("#checkbox-all-files")
+        checkAllFiles.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=file-checkbox]")
+                document.querySelector('#selected-files-count').textContent = checkboxes.length;
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=file-checkbox]")
+                document.querySelector('#selected-files-count').textContent = 0
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        let fileCheckboxes = document.querySelectorAll("[name=file-checkbox]")
+        for(let i=0; i<fileCheckboxes.length; i++){
+            fileCheckboxes[i].addEventListener("click", function(e){
+                fileCheckboxEvent(e)
+            })
+        }
+
+        function fileCheckboxEvent(e){
+            if(e.target.checked){
+                selected_files_count++
+            }else{
+                selected_files_count--
+            }
+            document.querySelector('#selected-files-count').textContent = selected_files_count
+        }
+
+        function humanFileSize(bytes, si=false, dp=1) {
+            const thresh = si ? 1000 : 1024;
+            if (Math.abs(bytes) < thresh) { return bytes + ' bytes';}
+
+            const units = si 
+                ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+                : ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            let u = -1;
+            const r = 10**dp;
+
+            do {
+                bytes /= thresh;
+                ++u;
+            } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+            return bytes.toFixed(dp) + ' ' + units[u];
+        }
+    
+    </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+
+    <style>
+        .nav-container{
+            height:90px;
+            width:100%;
+            display: flex;
+            flex-direction: row;
+            background-color: gray;
+
+        }
+    </style>
+</head>
+<body>
+
+    {% include './navbar.html' with user=user %}
+
+    <div>
+    
+        <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150">
+        <br>
+        <p>Firstname: {{user.first_name}}</p>
+        <p>Lastname: {{user.last_name}}</p>
+        <p>Username: {{user.username}}</p>
+        <p>Email: {{user.email}}</p>
+
+    </div>
+
+    
+    <button id="delete-account-btn">Delete account</button>
+    <a href="{% url 'accounts:edit_profile' %}">Edit Profile </a>
+    <a href="{% url 'accounts:change_password' %}">Change Password </a>
+   
+    <script>
+
+        const deleteBtn = document.querySelector("#delete-account-btn");
+
+        deleteBtn.addEventListener("click", function(){
+            fetch("{% url 'accounts:delete_account' %}")
+            .then(res=>res.json())
+            .then(res=>{
+                console.log(res)
+                if(res.result == "success"){
+                    window.location.href = "{% url 'accounts:login' %}"
+                }else{
+                    alert('failed deleting account')
+                }
+            })
+            .catch(err=>console.log(err))
+        })
+
+        const logoutBtn = document.querySelector("#logout-btn")
+        logoutBtn.addEventListener("click", function(){
+            let c = confirm("Are you sure you want to logout?")
+            if(c){
+                window.location.href = "{% url 'accounts:logout' %}"
+            }
+        })
+
+        
+    </script>
+</body>
+</html>

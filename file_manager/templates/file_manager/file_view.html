@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File | {{file.uploaded_file.name}}</title>
+    <style>
+        #file-iframe{
+            width:500px;
+            height:90vh;
+            border:1px solid gray;
+            display: none;
+        }
+        #loader, #error-container{
+            height: 200px;
+            border:1px solid gray;
+        }
+        #error-container{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="file-container">
+        <div id="filename">
+            <h2>file : {{file.get_filename}}</h2>
+        </div>
+        
+        <div id="loader">
+            <h4>loading.....</h4>
+        </div>
+
+        <div id="error-container">
+            <h3>No preview available. The file is either too big or not supported</h3>
+        </div>
+
+        <iframe src="" frameborder="0" id="file-iframe" sandbox="allow-same-origin"></iframe>
+    </div>
+
+    <script>
+
+        let timeout = setTimeout(function(){
+            console.log("no preview available")
+            document.querySelector("#loader").style.display = 'none'
+            document.querySelector("#error-container").style.display = 'block'
+        }, 5000)
+
+        iframe = document.querySelector("#file-iframe")
+        iframe.onload = function() {
+            console.log('loaded....')
+            clearTimeout(timeout)
+            document.querySelector("#loader").style.display = 'none'
+            iframe.style.display = 'block'
+        };
+        
+        iframe.src = '{{file.uploaded_file.url}}';
+        console.log('src', iframe.src) 
+        document.querySelector("#file-container").appendChild(iframe)
+        
+    </script>
+</body>
+</html>

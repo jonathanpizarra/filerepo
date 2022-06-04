@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager</title>
+
+    <style>
+        .nav-container{
+            height:90px;
+            width:100%;
+            display: flex;
+            flex-direction: row;
+            background-color: gray;
+
+        }
+
+        .upload-container, .files-container{
+            border:1px solid gray;
+            min-height: 100px;
+            margin:1rem;
+        }
+        #filename-input{
+            width:300px;
+        }
+        .file-edit-container, .file-details-container{
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .file-edit-sub-container, .file-details-sub-container{
+            width:500px;
+            height:500px;
+            background-color: white;
+        }
+        #filter-container{
+            border:1px solid gray;
+            margin: 1rem;
+        }
+    </style>
+</head>
+<body>
+    {% include './navbar.html' with user=user %}
+
+    <div class="upload-container">
+        <h3>File Upload</h3>
+        <form action="" id="upload-form">
+            {% csrf_token %}
+            <input type="file" id="file-upload-input">
+    
+            <label for="category-selection">Categories</label>
+            <select name="categories" id="category-selection">
+                <option value="none">Select Category</option>
+                {% for category in categories %}
+                    <option value="{{category.id}}">{{category.name.capitalize}}</option>
+                {% endfor %}
+            </select><br>
+            <label for="filename-input">enter filename</label>
+            <input type="text" id="filename-input" pattern="[^\\|/|:|*|?|\x22|<|>|\|]+gi" title='A file name can&apos;t contain the following characters:&#10; \ &#47; : * ? &quot; &lt; &gt; |'><br>
+            <span>progress:</span>
+            <progress value="0" max="100" id="upload-progressbar"></progress>
+            <br>
+
+            <button id="upload-btn" type="submit">Upload</button>
+
+        </form>
+        
+    </div>
+
+    <div class="files-container">
+        <div id="search-container">
+            <input type="search" id="search-input">
+            <button id="file-search-btn">Search files</button>
+        </div>
+
+        <div id="filter-container">
+            <p>Filter by:</p>
+            <label for="filter-by-filename-select">Filename:</label>
+            
+            <select name="" id="filter-by-filename-select">
+                <option value="none">None</option>
+                <option value="starts_with">Starts with</option>
+                <option value="ends_with">Ends with</option>
+                <option value="contains">Contains</option>
+            </select>
+            <input type="text" id="filter-by-filename-input">
+
+            <label for="filter-by-category-select">Category:</label>
+            <select name="" id="filter-by-category-select">
+                <option value="none">None</option>
+                {% for category in categories %}
+                    <option value="{{category.name}}">{{category.name.capitalize}}</option>
+                {% endfor %}
+            </select>
+
+            <label for="filter-by-uploader-select">Uploader:</label>
+            <select name="" id="filter-by-uploader-select">
+                <option value="none">None</option>
+                {% for up in uploaders %}
+                    <option value="{{up}}">{{up}}</option>
+                {% endfor %}
+            </select>
+
+            <label for="filter-by-upload-date">Upload date:</label>
+            <input type="date" id="filter-by-upload-date">
+
+            <button id="apply-filter-btn">Apply Filters</button>
+
+        </div>
+
+        <button id="show-all-files-btn">Show all files</button>
+        <button id="delete-files-btn">delete/archive selected files</button>
+        <p><span>number of selected files: </span><span id="selected-files-count">0</span></p>
+        <table border="1" id="files-table">
+            <tbody id="file-tbody">
+            <tr>
+                <td><input type="checkbox" id="checkbox-all"></td>
+                <td>Filename<button id="filename-sort-btn">↑↓</button></td>
+                <td>Size<button id="filesize-sort-btn">↑↓</button></td>
+                <td>Category<button id="category-sort-btn">↑↓</button></td>
+                <td>Uploader<button id="uploader-sort-btn">↑↓</button></td>
+                <td>Upload Date<button id="upload-date-sort-btn">↑↓</button></td>
+                <td>Actions</td>
+            </tr>
+            {% if fileuploads.count == 0 %}
+                <tr id="no-files" class="row-file">
+                    <td colspan="7">no files available</td>
+                </tr>
+            {% else %}
+                {% for f in fileuploads %}
+                    <tr class="row-file" id="file-id-{{f.id}}">
+                        <td class='col-checkbox'><input type="checkbox" name="file-checkbox" data-pk="{{f.id}}"></td>
+                        <td class="col-filename">{{f.get_filename}}</td>
+                        <td class="col-filesize">{{f.uploaded_file.size|filesizeformat}}</td>
+                        <td class="col-category">{{f.category.name}}</td>
+                        <td class="col-uploader">{{f.uploader.username}}</td>
+                        <td class="col-upload-date">{{f.upload_date|date:"m/d/Y, H:i:s"}}</td>
+                        <td class='col-file-actions'>
+                            <button class="edit-file-btn" data-pk="{{f.id}}">Edit</button>
+                            <a class="view-file-link" href="/file_manager/file_view/{{f.id}}" target="_blank"><button class="view-file-btn" data-pk="{{f.id}}">View</button></a>
+                            <a class="download-file-link" href="{{f.uploaded_file.url}}" download><button class="download-file-btn" data-pk="{{f.id}}">Download</button></a>
+                            <button class="details-file-btn" data-pk="{{f.id}}">Details</button>
+
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+        
+      
+    </div>
+
+
+    <div class="file-edit-container">
+        <div class="file-edit-sub-container">
+            <h2>file</h2>
+            
+            <input type="hidden" id="edit-file-id" data-index="-1">
+
+            <label for="edit-file-input">Replace file with :</label>
+            <input type="file" id="edit-file-input"> <br>
+
+            <label for="edit-file-filename">file name</label>
+            <input type="text" id="edit-file-filename"><br>
+
+            <label for="edit-file-category-selection">Categories</label>
+            <select name="edit-categories" id="edit-file-category-selection">
+                <option value="none">Select Category</option>
+                {% for category in categories %}
+                    <option value="{{category.id}}">{{category.name.capitalize}}</option>
+                {% endfor %}
+            </select><br>
+
+            <label for="edit-file-description">Category description</label>
+            <textarea id="edit-file-description" height="4"></textarea><br>
+
+            <progress value="0" max="100" id="edit-upload-progressbar"></progress>
+
+            <button id="edit-file-cancel-btn">cancel</button>
+            <button id="edit-file-save-btn">Save changes</button>
+
+        </div>
+
+    </div>
+
+    <div class="file-details-container">
+        <div class="file-details-sub-container">
+
+            <p><span>filename : </span><span id="file-details-filename"></span></p>
+            <p><span>category : </span><span id="file-details-category"></span></p>
+            <p><span>filesize : </span><span id="file-details-filesize"></span></p>
+            <p><span>uploader : </span><span id="file-details-uploader"></span></p>
+            <p><span>date uploaded : </span><span id="file-details-date-uploaded"></span></p>
+            <p><span>last edit by : </span><span id="file-details-last-editor"></span></p>
+            <p><span>last edit date : </span><span id="file-details-date-updated"></span></p>
+            <p><span>descriptoin : </span><span id="file-details-description"></span></p>
+            
+            <button id="file-details-close-btn">close</button>
+
+        </div>
+
+    </div>
+    
+    {{files|json_script:"fileuploads"}}
+
+    <script>
+// ========================================================
+        let selected_files_count = 0;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value
+        const excluded =   ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+        const not_allowed = [92,  47,  58,  42,  63,   34,  60,  62,  124]
+        let filesize_asc = false
+        let filename_asc = false
+        let category_asc = false
+        let uploader_asc = false
+        let upload_date_asc = false // false is descending, means newest to oldest
+
+        let files = document.querySelector("#fileuploads").textContent
+        let files_copy = files // original all files
+        //console.log(files)
+        console.log(JSON.parse(files) )
+        files = JSON.parse(files)
+        files_copy = JSON.parse(files_copy)
+         
+// ========================================================
+
+// ==================== START OF FILTER ====================
+
+
+        const applyFilterBtn = document.querySelector("#apply-filter-btn")
+        applyFilterBtn.addEventListener("click", function(){
+            if(files_copy.length > 0){
+                applyFilters()
+            }
+        })
+
+        function applyFilters(){
+            let filename_filter = document.querySelector("#filter-by-filename-select").value
+            let filename_input = document.querySelector("#filter-by-filename-input").value.trim().toLowerCase()
+            let category_filter = document.querySelector("#filter-by-category-select").value
+            let uploader_filter = document.querySelector("#filter-by-uploader-select").value
+            let date_filter = document.querySelector("#filter-by-upload-date").value.trim()
+            console.log('date filter:' + date_filter + ":")
+            console.log('uploader:', uploader_filter)
+            let date = date_filter.split('-') // yyyy-mm-dd
+            date = date[1] + '/' + date[2] + '/' + date[0]
+            files = []
+
+            // first filter 
+            // kunin muna lahat ng match sa bawat filter
+            for(let i=0; i<files_copy.length; i++){
+                let f = files_copy[i]
+                // filename filter
+                if(filename_input != '' && filename_filter != 'none'){
+                    if(filename_filter == 'starts_with'){
+                        if(f.filename.toLowerCase().startsWith(filename_input)){
+                            files.push(f)
+                            continue
+                        }
+                    }else if(filename_filter == 'ends_with'){
+                        if(f.filename.toLowerCase().endsWith(filename_input)){
+                            files.push(f)
+                            continue
+                        }
+                    }else if(filename_filter == 'contains'){
+                        if(f.filename.toLowerCase().includes(filename_input)){
+                            files.push(f)
+                            continue
+                        }
+                    }
+                }
+                //category filteer
+                if(category_filter != 'none'){
+                    if(f.category == category_filter){
+                        files.push(f)
+                        continue
+                    }
+                }
+                // uploader filter
+                if(uploader_filter != 'none'){
+                    if(f.uploader == uploader_filter){
+                        console.log('uploader match')
+                        files.push(f)
+                        continue
+                    }
+                }
+                // date filter
+                if(date_filter != ''){
+                    if(f.upload_date.startsWith(date)){
+                        files.push(f)
+                        continue
+                    }
+                }
+            }
+
+            // check array kung may match sa lahat ng nakaset na filter
+            // remove items pag di match
+            for(let i=0; i<files.length; i++){
+                let f = files[i]
+                // remove non-matching filename
+                if(filename_input != '' && filename_filter != 'none'){
+                    if(filename_filter == 'starts_with'){
+                        if(!f.filename.toLowerCase().startsWith(filename_input)){
+                            files.splice(i--, 1)
+                            continue
+                        }
+                    }else if(filename_filter == 'ends_with'){
+                        if(!f.filename.toLowerCase().endsWith(filename_input)){
+                            files.splice(i--, 1)
+                            continue
+                        }
+                    }else if(filename_filter == 'contains'){
+                        if(!f.filename.toLowerCase().includes(filename_input)){
+                            files.splice(i--, 1)
+                            continue
+                        }
+                    }
+                    
+                }
+
+                //category filteer
+                if(category_filter != 'none'){
+                    if(f.category != category_filter){
+                        files.splice(i--, 1)
+                        continue
+                    }
+                }
+
+                // uploader filter
+                if(uploader_filter != 'none'){
+                    if(f.uploader != uploader_filter){
+                        console.log('uploader match')
+                        files.splice(i--, 1)
+                        continue
+                    }
+                }
+
+                // date filter
+                if(date_filter != ''){
+                    if(!f.upload_date.startsWith(date)){
+                        files.splice(i--, 1)
+                        continue
+                    }
+                }
+
+
+            }
+
+
+            console.log(files)
+            populateTable()
+
+
+        }
+
+
+
+// ==================== END OF FILTER ====================
+
+        function sortFilesBy(key, asc){
+            if(key == 'filename' || key == 'uploader' || key == 'upload_date'){
+                files.sort((a,b)=>a[key].toLowerCase().localeCompare( b[key].toLowerCase()) )
+                if(!asc){
+                    files.reverse()
+                }
+            } else if(key == 'category'){
+                files.sort((a,b)=>a.filename.toLowerCase().localeCompare( b.filename.toLowerCase()) )
+                files.sort((a,b)=>a[key].toLowerCase().localeCompare( b[key].toLowerCase()) )
+                if(!asc){
+                    files.reverse()
+                }
+            }else{
+                if(asc){
+                files.sort((a,b)=>a[key] - b[key])
+                }else{
+                    files.sort((a,b)=>b[key] - a[key])
+                }
+            }
+        }
+
+        const filesizeSortBtn = document.querySelector("#filesize-sort-btn")
+        filesizeSortBtn.addEventListener("click", function(){
+            filesize_asc = !filesize_asc
+            if(filesize_asc){
+                sortFilesBy('filesize', true)
+            }else{
+                sortFilesBy('filesize', false)
+            }
+            console.log(files)
+            updateTableRows()
+        })
+
+        const filenameSortBtn = document.querySelector("#filename-sort-btn")
+        filenameSortBtn.addEventListener("click", function(){
+            filename_asc = !filename_asc
+            if(filename_asc){
+                sortFilesBy('filename', true)
+            }else{
+                sortFilesBy('filename', false)
+            }
+            console.log(files)
+            updateTableRows()
+        })
+
+        const categorySortBtn = document.querySelector("#category-sort-btn")
+        categorySortBtn.addEventListener("click", function(){
+            category_asc = !category_asc
+            if(category_asc){
+                sortFilesBy('category', true)
+            }else{
+                sortFilesBy('category', false)
+            }
+            console.log(files)
+            updateTableRows()
+        })
+
+        const uploaderSortBtn = document.querySelector("#uploader-sort-btn")
+        uploaderSortBtn.addEventListener("click", function(){
+            uploader_asc = !uploader_asc
+            if(uploader_asc){
+                sortFilesBy('uploader', true)
+            }else{
+                sortFilesBy('uploader', false)
+            }
+            console.log(files)
+            updateTableRows()
+        })
+
+        const uploadDateSortBtn = document.querySelector("#upload-date-sort-btn")
+        uploadDateSortBtn.addEventListener("click", function(){
+            upload_date_asc = !upload_date_asc
+            if(upload_date_asc){
+                sortFilesBy('upload_date', true)
+            }else{
+                sortFilesBy('upload_date', false)
+            }
+            console.log(files)
+            updateTableRows()
+        })
+
+
+
+        function updateTableRows(){
+            let rows = document.querySelectorAll('.row-file')
+            for(let i=0; i<rows.length; i++){
+                row = rows[i]
+                
+                row.setAttribute('id', 'file-id-' + files[i].file_id)
+                row.querySelector("[name=file-checkbox]").setAttribute('data-pk', files[i].file_id)
+                row.querySelector(".col-filename").textContent = files[i].filename
+                row.querySelector(".col-filesize").textContent = humanFileSize(files[i].filesize)
+                row.querySelector(".col-category").textContent = files[i].category
+                row.querySelector(".col-uploader").textContent = files[i].uploader
+                row.querySelector(".col-upload-date").textContent = files[i].upload_date
+
+                //fix data-pk and remove data-attrib not needed
+                row.querySelector(".edit-file-btn").setAttribute('data-pk', files[i].file_id)
+                row.querySelector(".view-file-btn").setAttribute('data-pk', files[i].file_id)
+                row.querySelector(".details-file-btn").setAttribute('data-pk', files[i].file_id)
+                row.querySelector(".download-file-btn").setAttribute('data-pk', files[i].file_id)
+                row.querySelector(".view-file-link").setAttribute('href','/file_manager/file_view/' + files[i].file_id)
+                row.querySelector(".download-file-link").setAttribute('href', files[i].filepath)
+
+            }
+        }
+    
+        const searchBtn = document.querySelector("#file-search-btn")
+        searchBtn.addEventListener("click", function(){
+            inputField = document.querySelector("#search-input")
+            input = inputField.value.toLowerCase().trim()
+            if(input == ''){
+                return
+            }
+            files = []
+            for(let i=0; i<files_copy.length; i++){
+                f = files_copy[i]
+                
+                if(f.filename.includes(input) || f.category.includes(input) || f.uploader.includes(input) || f.upload_date.includes(input)){
+                    files.push(f)
+                }
+            }
+            populateTable()
+
+        })
+
+        const showAllFilesBtn = document.querySelector("#show-all-files-btn")
+        showAllFilesBtn.addEventListener('click', function(){
+            if(files.length == files_copy.length) return
+            files = JSON.parse(JSON.stringify(files_copy))
+            populateTable()
+        })
+
+        const saveEditFileBtn = document.querySelector("#edit-file-save-btn")
+        saveEditFileBtn.addEventListener("click", function(){
+            const filename = document.querySelector("#edit-file-filename")
+            const description = document.querySelector("#edit-file-description")
+            const category_id = document.querySelector("#edit-file-category-selection")
+            const fileInput = document.querySelector("#edit-file-input")
+            const file_id = document.querySelector("#edit-file-id").value
+
+            if(filename.value.trim() == ''){
+                alert("file name field is empty")
+                return
+            }
+
+            if(category_id.value == 'none'){
+                alert("no category selected")
+                return
+            }
+
+            const formdata = new FormData();
+
+            if(fileInput.files.length > 0){
+                formdata.append('fileupload', fileInput.files[0]);
+            }
+            
+            formdata.append('file_id', file_id)
+            formdata.append('category_id', category_id.value)
+            formdata.append('filename', filename.value.trim())
+            formdata.append('description', description.value.trim())
+
+            var request = new XMLHttpRequest();
+            let completed = false;
+
+            console.log('formdata:', formdata)
+
+            request.responseType = 'json'
+
+            if(fileInput.files.length > 0){
+                request.upload.addEventListener('progress', function (e) {
+                    var fileSize = fileInput.files[0].size;
+                    console.log(fileSize);
+
+                    if (e.loaded <= fileSize) {
+                        let percent = Math.round(e.loaded / fileSize * 100);
+                        document.querySelector("#edit-upload-progressbar").value = percent;
+                    } 
+                    if(e.loaded == e.total){
+                        document.querySelector("#edit-upload-progressbar").value = '100' 
+                    }
+                });
+            }
+            
+            request.onload = function(){
+                if(!completed){
+                    let res = request.response
+                    console.log("response:",res)
+                    console.log(JSON.parse(res.data.fileupload)[0])
+                    
+                    let fileupload = JSON.parse(res.data.fileupload)[0]
+                    let category = JSON.parse(res.data.category)[0]
+                    let uploader = JSON.parse(res.data.uploader)[0]
+                    if(res.result != "success"){
+                        alert(res.message)
+                        return
+                    }
+                    completed = true
+                    console.log("response:",res)
+        
+                    fileInput.value = ''
+                    filename.value = ''
+                    description.value = ''
+                    category_id.value = 'none'
+                    document.querySelector("#edit-upload-progressbar").value = 0;
+                    
+                    const row = document.querySelector("#file-id-" + file_id)
+                    row.querySelector(".col-filename").textContent = fileupload.fields.uploaded_file.split("/").pop()
+                    row.querySelector(".col-filesize").textContent = humanFileSize(res.data.filesize)
+                    row.querySelector(".col-category").textContent = category.fields.name
+                    row.querySelector(".col-category").setAttribute('data-category-d', category.pk)
+                    row.querySelector(".col-uploader").textContent = uploader.fields.username
+                    document.querySelector(".file-edit-container").style.display = 'none'
+                    alert("successfully update file")
+                    
+                }
+                
+            }
+
+            request.open('POST', "{% url 'file_manager:save_file_changes' %}");
+            request.timeout = 45000;
+            request.setRequestHeader('X-CSRFToken', csrftoken)
+            request.send(formdata);
+            
+
+
+            
+        })
+
+        const cancelEditFileBtn = document.querySelector("#edit-file-cancel-btn")
+        cancelEditFileBtn.addEventListener("click", function(){
+            document.querySelector(".file-edit-container").style.display = 'none'
+        })
+
+        function editBtnsEvent(e){
+            id = e.target.getAttribute('data-pk')
+            document.querySelector("#edit-file-id").value = id
+            console.log('fileid', id)
+
+            fetch("{% url 'file_manager:get_file_details' %}", {
+                method : 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    file_id : id
+                })
+            })
+            .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    console.log(JSON.parse(res.data.fileupload)[0])
+
+                    if(res.result == "success"){
+                        let file = JSON.parse(res.data.fileupload)[0]
+                        let filename = file.fields.uploaded_file.split('/')
+                        filename = filename.pop()
+                        filename = filename.split('.')
+                        filename.pop()
+                        console.log('filename:', filename)
+                        document.querySelector("#edit-file-filename").value = filename.join('')
+                        document.querySelector("#edit-file-category-selection").value = file.fields.category
+                        document.querySelector("#edit-file-description").value = file.fields.description
+                        document.querySelector(".file-edit-container").style.display = 'flex'
+                    }
+                })
+                .catch(err=>console.log(err))
+
+        }
+
+        const editBtns = document.querySelectorAll(".edit-file-btn")
+        for(let i=0; i<editBtns.length; i++){
+            editBtns[i].addEventListener('click', function(e){
+                editBtnsEvent(e)
+            })
+        }
+
+        const closeDetailsBtn = document.querySelector("#file-details-close-btn")
+        closeDetailsBtn.addEventListener("click", function(){
+            document.querySelector(".file-details-container").style.display = 'none'
+        })
+
+        function detailsBtnsEvent(e){
+            id = e.target.getAttribute('data-pk')
+
+            fetch("{% url 'file_manager:get_file_details' %}", {
+                method : 'POST',
+                headers : {
+                    'X-CSRFToken': csrftoken,
+                },
+                body : JSON.stringify({
+                    file_id : id
+                })
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                console.log(res)
+                console.log(JSON.parse(res.data.fileupload)[0])
+                if(res.result == 'success'){
+                    const fileupload = JSON.parse(res.data.fileupload)[0]
+                    const uploader = JSON.parse(res.data.uploader)[0]
+                    const updater = JSON.parse(res.data.updater)[0]
+                    const category = JSON.parse(res.data.category)[0]
+                    console.log(uploader)
+                    console.log(category)
+
+                    document.querySelector("#file-details-filename").textContent = fileupload.fields.uploaded_file.split('/').pop()
+                    document.querySelector("#file-details-category").textContent = category.fields.name
+                    document.querySelector("#file-details-filesize").textContent = humanFileSize(res.data.filesize) + " (" + res.data.filesize + " bytes)"
+                    document.querySelector("#file-details-uploader").textContent = uploader.fields.username
+                    document.querySelector("#file-details-date-uploaded").textContent = (new Date(fileupload.fields.upload_date)).toUTCString()
+                    document.querySelector("#file-details-last-editor").textContent = updater.fields.username
+                    document.querySelector("#file-details-date-updated").textContent = (new Date(fileupload.fields.last_edit_date)).toUTCString()
+                    document.querySelector("#file-details-description").textContent = fileupload.fields.description
+                    document.querySelector(".file-details-container").style.display = 'flex'
+                }
+
+            })
+            .catch(err=>console.log(err))
+        }
+
+        const detailsBtns = document.querySelectorAll('.details-file-btn')
+        for(let i=0; i<detailsBtns.length; i++){
+            detailsBtns[i].addEventListener('click', function(e){
+                detailsBtnsEvent(e)
+            })
+        }
+    
+
+        const deleteBtn = document.querySelector("#delete-files-btn")
+        deleteBtn.addEventListener("click", function(){     
+            let checkboxes = document.querySelectorAll("[name=file-checkbox]:checked")
+            let file_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+
+            if(file_ids.length == 0){
+                alert('no file/s selected')
+                return
+            }
+
+            let conf = confirm("Are you sure you want to delete/archive files? ")
+            
+            if(conf){
+                fetch("{% url 'file_manager:delete_selected_files' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        file_ids: file_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        console.log(res)
+                        files = res.data.files
+                        files_copy = res.data.files
+                        populateTable()
+                        
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+
+        })
+
+        const uploadBtn = document.querySelector("#upload-btn")
+        uploadBtn.addEventListener("click", function(e){
+            e.preventDefault()
+            const formdata = new FormData();
+            const fileInput = document.querySelector("#file-upload-input")
+            const category = document.querySelector("#category-selection")
+            const filenameInput = document.querySelector("#filename-input")
+
+            console.log(fileInput.value)
+            console.log("categ : ", category.value)
+            if(fileInput.files.length == 0){
+                alert("no file to upload")
+                return;
+            }
+
+            if(category.selectedIndex == 0){
+                alert("no category selected")
+                return
+            }
+
+            if(filenameInput.value.trim() == ""){
+                alert("no filename indicated")
+                return
+            }
+
+            if( excluded.some((char)=> filenameInput.value.trim().includes(char) ) ){
+                alert("A file name can't contain the following characters:\n\n \\ / : * ? \" < > |")
+                return
+            }
+
+            console.log("filename::", fileInput.files[0].name)
+        
+            formdata.append('file', fileInput.files[0]);
+            formdata.append('category_id', category.value);
+            formdata.append('filename', filenameInput.value.trim())
+
+            var request = new XMLHttpRequest();
+            let completed = false;
+
+            console.log('formdata:', formdata)
+
+            request.responseType = 'json'
+            request.upload.addEventListener('progress', function (e) {
+                var fileSize = fileInput.files[0].size;
+                console.log(fileSize);
+
+                if (e.loaded <= fileSize) {
+                    let percent = Math.round(e.loaded / fileSize * 100);
+                    document.querySelector("#upload-progressbar").value = percent;
+                } 
+
+                if(e.loaded == e.total){
+                    document.querySelector("#upload-progressbar").value = '100'
+                    
+                }
+            });
+
+            request.onload = function(){
+                if(!completed){
+                    let res = request.response
+                    if(res.result != "success"){
+                        alert(res.message)
+                        return
+                    }
+                    completed = true
+                    console.log("response:",request.response)
+        
+                    fileInput.value = ''
+                    filenameInput.value = ''
+                    document.querySelector("#upload-progressbar").value = 0;
+                     
+                    console.log('filess:', res.data.files)
+                    files = res.data.files
+                    files_copy = res.data.files
+                    
+                    populateTable()
+                }
+                
+            }
+
+            request.open('POST', "{% url 'file_manager:upload_file' %}");
+            request.timeout = 45000;
+            request.setRequestHeader('X-CSRFToken', csrftoken)
+            request.send(formdata);
+        })
+
+        function populateTable(){
+            let rows = document.querySelectorAll(".row-file")
+            for(let i=0; i<rows.length; i++){
+                rows[i].remove()
+            }
+
+            selected_files_count = 0
+
+            if(files.length == 0){
+                let row = document.createElement("tr")
+                row.setAttribute('id', 'no-files')
+                row.setAttribute('class', 'row-file')
+                row.innerHTML = "<td colspan='7'>no files available</td>"
+                document.querySelector("#file-tbody").appendChild(row)
+                return
+            }
+
+            let tbody = document.querySelector("#file-tbody")
+            for(let i=0; i<files.length; i++){
+
+                let id = files[i].file_id
+                let filename = files[i].filename
+                let filesize = files[i].filesize
+                let category_name = files[i].category
+                let uploader_name = files[i].uploader
+                let upload_date = files[i].upload_date
+                let path = files[i].filepath
+
+                let row = document.createElement('tr')
+                row.setAttribute('class', 'row-file')
+                row.setAttribute('id', 'file-id-' + id)
+                let rowData = "<td class='col-checkbox'><input type='checkbox' name='file-checkbox' data-pk='" + id + "'></td>" +
+                "<td class='col-filename'>" + filename + "</td>" +
+                "<td class='col-filesize'>" + humanFileSize(filesize) + "</td>" +
+                "<td class='col-category'>" + category_name + "</td>" +
+                "<td class='col-uploader'>" + uploader_name + "</td>" +
+                "<td class='col-upload-date'>" + upload_date + "</td>" +
+                "<td class='col-file-actions'>" + 
+                    "<button class='edit-file-btn' data-pk='" + id + "'>Edit</button> " + 
+                    "<a class='view-file-link' href='/file_manager/file_view/" + id + "' target='_blank'><button class='view-file-btn' data-path='" + path + "' data-pk='" + id + "'>View</button></a> " +
+                    "<a class='download-file-link' href='" + path + "' download><button class='download-file-btn' data-pk='" + id + "'>Download</button></a> " +
+                    "<button class='details-file-btn' data-pk='" + id + "'>Details</button> " +
+                "</td>"
+                row.innerHTML = rowData
+                tbody.appendChild(row)
+
+                row.querySelector('.edit-file-btn').addEventListener('click', function(e){
+                    editBtnsEvent(e)
+                })
+
+                row.querySelector('.details-file-btn').addEventListener('click', function(e){
+                    detailsBtnsEvent(e)
+                })
+
+            }
+
+
+        }
+
+        const fileInput = document.querySelector("#file-upload-input");
+        fileInput.addEventListener("change", function(){
+            if (fileInput.files && fileInput.files[0]) {
+                let fn = fileInput.files[0].name.split('.')
+                fn.pop()
+                fn = fn.join("")
+                document.querySelector("#filename-input").value = fn
+            }
+        })
+
+        // changes file name input in edit file form whenever user selects a file
+        const editFileInput = document.querySelector("#edit-file-input");
+        editFileInput.addEventListener("change", function(){
+            // if (editFileInput.files && editFileInput.files[0]) {
+            //     let fn = editFileInput.files[0].name.split('.')
+            //     fn.pop()
+            //     fn = fn.join("")
+            //     document.querySelector("#edit-file-filename").value = fn
+            // }
+        })
+
+        const filenameInput = document.querySelector("#filename-input")
+        filenameInput.addEventListener("keypress", function(e){
+            if(not_allowed.includes(e.which)){
+                console.log('not allowed : ', e.which)
+                valid = document.querySelector("#upload-form").reportValidity()
+                console.log("valid:", valid)
+                //e.preventDefault()
+            }
+        })
+
+        const checkAll = document.querySelector("#checkbox-all")
+        checkAll.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=file-checkbox]")
+                document.querySelector('#selected-files-count').textContent = checkboxes.length;
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=file-checkbox]")
+                document.querySelector('#selected-files-count').textContent = 0
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        let checkboxes = document.querySelectorAll("[name=file-checkbox]")
+        for(let i=0; i<checkboxes.length; i++){
+            checkboxes[i].addEventListener("click", function(e){
+                checkboxEvent(e)
+            })
+        }
+
+        function checkboxEvent(e){
+            if(e.target.checked){
+                selected_files_count++
+            }else{
+                selected_files_count--
+            }
+            document.querySelector('#selected-files-count').textContent = selected_files_count
+        }
+
+        function humanFileSize(bytes, si=false, dp=1) {
+            const thresh = si ? 1000 : 1024;
+            if (Math.abs(bytes) < thresh) { return bytes + ' bytes';}
+
+            const units = si 
+                ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+                : ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            let u = -1;
+            const r = 10**dp;
+
+            do {
+                bytes /= thresh;
+                ++u;
+            } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+            return bytes.toFixed(dp) + ' ' + units[u];
+        }
+    </script>
+</body>
+</html>

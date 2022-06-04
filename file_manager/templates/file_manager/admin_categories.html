@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Categories</title>
+    <style>
+        .nav-container{
+            height:90px;
+            width:100%;
+            display: flex;
+            flex-direction: row;
+            background-color: gray;
+
+        }
+        .category-edit-container, .category-details-container{
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .category-edit-sub-container, .category-details-sub-container{
+            width:500px;
+            height:500px;
+            background-color: white;
+        }
+        .new-category-container{
+            border:1px solid gray;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    {% include './navbar.html' with user=user %}
+    <button id="file-manager-btn">go to File Manager</button>
+    <div class="new-category-container">
+        <h2>New category</h2>
+        {% csrf_token %}
+        <label for="new-category-name">Name</label>
+        <input type="text" id="new-category-name">
+
+        <label for="new-category-description">Description</label>
+        <input type="text" id="new-category-description">
+
+        <button id="save-new-category-btn">save new category</button>
+
+    </div>
+
+    <div class="categories-container">
+        
+        <button id="delete-category-btn">Delete</button>
+        <table border='1' id="category-table">
+            <tbody id="category-tbody">
+            <tr>
+                <td><input type="checkbox" id="checkbox-all"></td>
+                <td>Category Name</td>
+                <td>Description</td>
+                <td>Actions</td>
+            </tr>
+            {% if categories.count == 0 %}
+                <tr id="no-categories">
+                    <td colspan="4">no categories available</td>
+                </tr>
+            {% else %}
+                {% for category in categories %}
+                    <tr class='row-category' id="category-id-{{category.id}}">
+                        <td class='col-checkbox'><input type="checkbox" name="category-checkbox" data-pk="{{category.id}}"></td>
+                        <td class='col-category-name' data-name="{{category.name}}">{{category.name}}</td>
+                        <td class='col-category-description'>{{category.description}}</td>
+                        <td class='col-category-actions'>
+                            <button class="edit-category-btn" data-pk="{{category.id}}">Edit</button>
+                            <button class="details-category-btn" data-pk="{{category.id}}">Details</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+    
+    </div>
+
+    <div class="category-edit-container">
+        <div class="category-edit-sub-container">
+            <h2>Category</h2>
+            
+            <input type="hidden" id="edit-category-id" data-index="-1">
+            <label for="edit-category-name">Category name</label>
+            <input type="text" id="edit-category-name"><br>
+
+            <label for="edit-category-description">Category description</label>
+            <input type="text" id="edit-category-description">
+
+            <button id="edit-category-cancel-btn">cancel</button>
+            <button id="edit-category-save-btn">Save changes</button>
+
+        </div>
+
+    </div>
+
+    <div class="category-details-container">
+        <div class="category-details-sub-container">
+            <h2>Category details</h2>
+            <p>
+                <span>category id:</span>
+                <span id="details-category-id"></span>
+            </p>
+            <p>
+                <span>category name:</span>
+                <span id="details-category-name"></span>
+            </p>
+            <p>
+                <span>description:</span>
+                <span id="details-category-description"></span>
+            </p>
+            <p>
+                <span>number of files under this category:</span>
+                <span id="details-category-count"></span>
+            </p>
+            <p>
+                <span>creation date:</span>
+                <span id="details-category-creation-date"></span>
+            </p>
+            <p>
+                <span>last edit date:</span>
+                <span id="details-category-last-edit-date"></span>
+            </p>
+            <p>
+                <span>created by:</span>
+                <span id="details-category-creator"></span>
+            </p>
+            <p>
+                <span>last update by:</span>
+                <span id="details-category-last-editor"></span>
+            </p>
+
+            <button id="details-category-close-btn">close</button>
+        </div>
+    </div>
+
+    <script>
+
+        function detailsBtnEvent(e){
+            let id = e.target.getAttribute('data-pk')
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'file_manager:admin_get_category_details' %}",{
+                method: 'POST',
+                headers:{
+                    'X-CSRFToken': csrftoken,
+                },
+                body:JSON.stringify({
+                    category_id: id
+                })
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                console.log(res)
+                console.log(JSON.parse(res.data.category)[0])
+                console.log(JSON.parse(res.data.creator)[0])
+                console.log(JSON.parse(res.data.editor)[0])
+
+                const category = JSON.parse(res.data.category)[0]
+                const creator = JSON.parse(res.data.creator)[0]
+                const editor = JSON.parse(res.data.editor)[0]
+
+                if(res.result == "success"){
+                    document.querySelector("#details-category-id").textContent = category.pk
+                    document.querySelector("#details-category-name").textContent = category.fields.name
+                    document.querySelector("#details-category-description").textContent = category.fields.description
+                    document.querySelector("#details-category-count").textContent = res.data.count
+                    document.querySelector("#details-category-creation-date").textContent = category.fields.creation_date
+                    document.querySelector("#details-category-last-edit-date").textContent = category.fields.last_edit_date
+                    document.querySelector("#details-category-creator").textContent = creator.fields.username
+                    document.querySelector("#details-category-last-editor").textContent = editor.fields.username
+
+                    document.querySelector(".category-details-container").style.display = 'flex'
+                }
+            })
+            .catch(err=>console.log(err))
+        }
+        
+        const saveNewBtn = document.querySelector("#save-new-category-btn")
+        saveNewBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let nameInput = document.querySelector("#new-category-name")
+            let descInput = document.querySelector("#new-category-description")
+            
+            let name = nameInput.value.trim()
+            let desc = descInput.value.trim()
+
+            if( name == "" || desc == ""){
+                alert("empty fields")
+                return
+            }
+
+            fetch("{% url 'file_manager:admin_save_new_category' %}", {
+                method : "POST",
+                headers:{
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    name: name,
+                    desc: desc
+                })
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                if(res.result==="success"){
+                    console.log(res)
+                    let row = document.createElement('tr')
+                    let id = res.data.id
+                    let count = res.data.count
+                    
+                    row.setAttribute('id', 'category-id-' + id)
+                    let rowData = "<td class='col-checkbox'><input type='checkbox' name='category-checkbox' data-pk='" + id + "'></td>" +
+                    "<td class='col-category-name' data-name='" + res.data.name + "'>" + res.data.name + "</td>" +
+                    "<td class='col-category-description'>" + res.data.desc + "</td>" +
+                    "<td class='col-category-actions'>" +
+                        "<button class='edit-category-btn' data-pk='" + id + "'>Edit</button> " +
+                        "<button class='details-category-btn' data-pk='" + id + "'>Details</button>"
+                    "</td>"
+                    
+                    let tbody = document.querySelector("#category-tbody")
+                    row.innerHTML = rowData
+                    tbody.insertBefore(row, tbody.children[1])
+
+                    if(count  == 1){
+                        document.querySelector("#no-categories").remove()
+                    }
+                    
+                    //add event lister for new edit button
+                    document.querySelector(".edit-category-btn").addEventListener("click", function(e){
+                        let row = document.querySelector("#category-id-" + id)
+                        let name = row.querySelector(".col-category-name").getAttribute('data-name')
+                        let description = row.querySelector(".col-category-description").textContent
+                        
+                        document.querySelector(".category-edit-container").style.display = 'flex'
+                        document.querySelector("#edit-category-name").value = name
+                        document.querySelector("#edit-category-description").value = description
+                        document.querySelector("#edit-category-id").value = id
+
+                    })
+
+                    document.querySelector(".details-category-btn").addEventListener("click", function(e){
+                        detailsBtnEvent(e)
+                    })
+
+                    nameInput.value = ''
+                    descInput.value = ''
+                }
+
+            })
+            .catch(err=>console.log(err))
+        })
+
+        
+        const editBtns = document.querySelectorAll(".edit-category-btn")
+        for(let i=0; i<editBtns.length; i++){
+            editBtns[i].addEventListener("click", function(e){
+                let id = e.target.getAttribute('data-pk')
+                let name = document.querySelectorAll(".col-category-name")[i].getAttribute('data-name')
+                let description = document.querySelectorAll(".col-category-description")[i].textContent
+                
+                document.querySelector(".category-edit-container").style.display = 'flex'
+                document.querySelector("#edit-category-name").value = name
+                document.querySelector("#edit-category-description").value = description
+                document.querySelector("#edit-category-id").value = id
+
+            })
+        }
+
+        const detailBtns = document.querySelectorAll(".details-category-btn")
+        for(let i=0; i<detailBtns.length; i++){
+            detailBtns[i].addEventListener("click", function(e){
+                detailsBtnEvent(e)
+            })
+        }
+    
+        const closeDetailsBtn = document.querySelector("#details-category-close-btn")
+        closeDetailsBtn.addEventListener("click", function(){
+            document.querySelector(".category-details-container").style.display = 'none'
+
+        })
+
+        const saveBtn = document.querySelector("#edit-category-save-btn")
+        saveBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let category_id = document.querySelector("#edit-category-id").value
+            let name = document.querySelector("#edit-category-name").value.trim()
+            let description = document.querySelector("#edit-category-description").value.trim()
+            if(name == '' || description == ''){
+                alert('fill out empty fields')
+            }else{
+                console.log(category_id, name, description)
+                fetch("{% url 'file_manager:save_category_changes' %}", {
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        category_id : category_id,
+                        name: name,
+                        description: description
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == 'success'){
+                        let row = document.querySelector("#category-id-" + category_id)
+                        row.querySelector(".col-category-name").textContent = name
+                        row.querySelector(".col-category-description").textContent = description
+                        
+                        document.querySelector(".category-edit-container").style.display = 'none'
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+        })
+
+        const cancelBtn = document.querySelector("#edit-category-cancel-btn")
+        cancelBtn.addEventListener("click", function(){
+            document.querySelector(".category-edit-container").style.display = 'none'
+        })
+
+        const deleteBtn = document.querySelector("#delete-category-btn")
+        deleteBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let checkboxes = document.querySelectorAll("[name=category-checkbox]:checked")
+            let category_ids = [...checkboxes].map((c, i)=> c.getAttribute('data-pk'))
+            
+            console.log(category_ids)
+
+            if(category_ids.length == 0){
+                alert("no chosen category/categories")
+                return
+            }
+            let conf = confirm("Are you sure you want to delete/archive categories? \nAll files under the selected categories will also be archived")
+            
+            if(conf){
+                fetch("{% url 'file_manager:delete_selected_categories' %}",{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body:JSON.stringify({
+                        category_ids: category_ids
+                    })
+                })
+                .then(res=>res.json())
+                .then(res=>{
+                    console.log(res)
+                    if(res.result == "success"){
+                        let count = res.data.count
+                        for(let cid of category_ids){
+                            document.querySelector("#category-id-"+cid).remove()
+                        }
+                        if(count == 0){
+                            let row = document.createElement("tr")
+                            row.setAttribute('id', 'no-categories')
+                            row.innerHTML = "<td colspan='4'>no categories available</td>"
+                            document.querySelector("#category-tbody").appendChild(row)
+                        }
+
+                        alert(res.message)
+                    }
+                })
+                .catch(err=>console.log(err))
+            }
+            
+
+        })
+
+        const checkAll = document.querySelector("#checkbox-all")
+        checkAll.addEventListener("click", function(e){
+            if(e.target.checked){
+                console.log('checked')
+                let checkboxes = document.querySelectorAll("[name=category-checkbox]")
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = true
+                }
+            }else{
+                console.log('not checked')
+                let checkboxes = document.querySelectorAll("[name=category-checkbox]")
+                for(let i=0; i<checkboxes.length; i++){
+                    checkboxes[i].checked = false
+                }
+            }
+        })
+
+        const fileManagerBtn = document.querySelector("#file-manager-btn")
+        fileManagerBtn.addEventListener("click", function(){
+            window.location.href = "{% url 'file_manager:index' %}"
+        })
+
+    </script>
+</body>
+</html>

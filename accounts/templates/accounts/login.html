@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'accounts/css/login.css' %}">
+    <title>Login</title>
+</head>
+<body>
+
+    <div class="login-container  m-0 p-0 d-flex justify-content-center align-items-center">
+        <div class="login-box border rounded-3 d-flex flex-column justify-content-evenly align-items-center">
+            {% csrf_token %}
+            <h3 class="mt-5 mb-3">Login</h3>
+            <label for="email">Username/Email: </label>
+            <input type="text" name="email" id="email" class="mb-3"/>
+        
+            <label for="password">Password: </label>
+            <input type="password" name="password" id="password"/>
+            <br>
+            <button id="login-btn" class="btn btn-primary">Login</button>
+            <br>
+
+            <p>
+                No account yet? 
+                <a href="{% url 'accounts:register' %}" class="my-3">Register</a>
+
+            </p>
+        </div>
+    </div>
+    
+    
+
+    <script>
+        let loginBtn = document.querySelector("#login-btn");
+        
+        loginBtn.addEventListener('click', function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const email = document.querySelector("#email").value.trim();
+            const password = document.querySelector("#password").value.trim();
+            console.log(email, password)
+
+            if(email == "" || password == ""){
+                alert("empty fields")
+                return;
+            }
+
+            fetch("{% url 'accounts:request_login' %}", {
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                headers: {
+                'Content-Type': 'application/json',
+                //'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken,
+                "X-Requested-With": "XMLHttpRequest",
+                }, 
+                body: JSON.stringify({
+                    email : email,
+                    password : password
+                }) // body data type must match "Content-Type" header
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                if(res.result == "success"){
+                    console.log("success")
+                    window.location.href = "{% url 'file_manager:index' %}"
+                }else{
+                    console.log("faileeddd")
+                    console.log(res)
+                    document.querySelector("#password").value = ''
+                }
+            })
+        })
+    </script>
+
+</body>
+</html>

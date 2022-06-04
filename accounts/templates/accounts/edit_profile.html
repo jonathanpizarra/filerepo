@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+</head>
+<body>
+    <div class="form">
+        {% csrf_token %}
+
+        <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150" id="profile-pic">
+
+        <br>
+        <input type="file" id="profile-img-file">
+
+        <label for="edit-username">Username</label>
+        <input type="text" id="edit-username" value={{user.username}}> <br>
+
+        <label for="edit-firstname">firstname</label>
+        <input type="text" id="edit-firstname" value={{user.first_name}}> <br>
+
+        <label for="edit-lastname">lastname</label>
+        <input type="text" id="edit-lastname" value={{user.last_name}}> <br>
+
+        <label for="edit-email">email</label>
+        <input type="text" id="edit-email" value={{user.email}}> <br>
+
+        <a href="{% url 'accounts:profile' %}">Cancel </a>
+        <button id="save-changes">Save Changes</button>
+
+    </div>
+
+    <script>
+        const saveBtn = document.querySelector("#save-changes")
+        saveBtn.addEventListener("click", function(){
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const username = document.querySelector("#edit-username").value.trim();
+            const firstname = document.querySelector("#edit-firstname").value.trim();
+            const lastname = document.querySelector("#edit-lastname").value.trim();
+            const email = document.querySelector("#edit-email").value.trim();
+            const imgInput = document.querySelector("#profile-img-file");
+
+            const formData = new FormData();
+            formData.append('file', imgInput.files[0])
+            formData.append('username', username)
+            formData.append('firstname', firstname)
+            formData.append('lastname', lastname)
+            formData.append('email', email)
+
+            fetch("{% url 'accounts:save_profile_changes' %}", {
+                method: 'POST',
+                headers: {
+                'X-CSRFToken': csrftoken,
+                "X-Requested-With": "XMLHttpRequest",
+                }, 
+                body: formData
+            })
+            .then(res=>res.json())
+            .then(res=>{
+                if(res.result == "success"){
+                    window.location.href = "{% url 'accounts:profile' %}"
+                }else{
+                    alert("error: " + res.message)
+                }
+            })
+            .catch(err=>console.log(err))
+        })
+
+        const profilePic = document.querySelector("#profile-img-file");
+        profilePic.addEventListener("change", function(){
+            if (profilePic.files && profilePic.files[0]) {
+                if(window.FileReader){
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.querySelector("#profile-pic").setAttribute('src', e.target.result)
+                    }
+                    reader.readAsDataURL(profilePic.files[0]);
+                }else{
+                    console.log('your browser does not suppoert FileReader')
+                }
+            }
+        })
+
+    </script>
+</body>
+</html>

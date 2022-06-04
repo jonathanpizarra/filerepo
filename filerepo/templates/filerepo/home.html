@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Jonathan Pizarra">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'home/css/home.css' %}">
+    <title>Home</title>
+</head>
+<body>
+
+    <div class="home-container m-0 p-0 d-flex justify-content-center align-items-center">
+        <div class="home-box border rounded-3 d-flex flex-column justify-content-evenly align-items-center">
+            <h1>FileRepo Web App</h1>
+            <p><i>Save files for everyone</i></p>
+            <a class="btn btn-primary" href="{% url 'accounts:login' %}">Login</a>
+            <a class="btn btn-primary" href="{% url 'accounts:register' %}">Register</a>
+        </div>
+    </div>
+</body>
+</html>
