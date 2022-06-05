@@ -9,7 +9,7 @@ Created using Django 4 and Bootstrap 5
 
 - Users can create account and upload files to the repository.
 - Any user can see any file uploaded by anyone.
-- Any user can edit filename, archive, download any file in the repository.
+- Any user can edit, archive, filter, or download any file in the repository.
 - The admin can add/edit/delete file categories.
 - The admin can generate logs of the system.
 - The admin can also create/archive user accounts
