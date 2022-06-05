@@ -12,6 +12,7 @@ Created using Django 4 and Bootstrap 5
 - Any user can edit filename, archive, download any file in the repository.
 - The admin can add/edit/delete file categories.
 - The admin can generate logs of the system.
+- The admin can also create/archive user accounts
 
 
 ### media folder contents 
