@@ -4,178 +4,166 @@
     <meta charset="UTF-8">
     <meta name="author" content="Jonathan Pizarra">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports</title>
 
-    <style>
-        .nav-container{
-            height:90px;
-            width:100%;
-            display: flex;
-            flex-direction: row;
-            background-color: gray;
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 
-        }
+    <link rel="stylesheet" href="{% static 'nav/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'reports/css/reports.css' %}">
 
-        #reports-container, #user-list-report-container, #user-filter-container, #file-list-report-container, #file-filter-container, #activity-logs-container, pre{
-            border:1px solid gray;
-            margin: 0.5rem;
-        }
-        #user-list-report-container{
-            display: block; 
-        }
-        #file-list-report-container, #user-list-report-container{
-            display: none;
-        }
-        pre{
-            overflow-x: auto;
-        }
-        #log-filter-list{
-            list-style-type: none;
-            overflow-y: auto;
-            height:0;
-            border:1px solid gray;
-            display: inline-block;
-        }
-        #filter-options-container{
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            border:1px solid gray;
-            width:200px;
-        }
-        #log-filter-btn{
-            height: 40px;
-        }
-        #log-filter-list{
-            position: absolute;
-            top:20px;
-            left:0;
-            transition: height 0.2s;
-            margin:0;
-            padding:0;
-            width: 100%;
-            background-color: #eee;
-        }
+    <title>Reports and Logs</title>
 
-    </style>
 </head>
-<body>
+<body class="bg-light">
 
     {% include '../file_manager/navbar.html' with user=user %}
 
     {% csrf_token %}
 
-    <div id="reports-container">
-        <h2>Reports and Logs</h2>
+    <div id="reports-container" class="m-3 p-3 border rounded-3 bg-white">
+        <h3>Reports and Logs</h3>
+        <hr class="w-100">
 
-        <button id="user-list-btn">User list</button>
-        <button id="file-list-btn">File upload list</button>
-        <button id="activity-logs-btn">Activity logs</button>
+        <div class="d-flex flex-row">
+            <button class="log-btn border px-4 btn btn-primary" id="user-list-btn">User List</button>
+            <button class="log-btn border px-4 btn btn-primary" id="file-list-btn">File Upload List</button>
+            <button class="log-btn border px-4 btn btn-primary" id="activity-logs-btn">Activity Logs</button>
+        </div>
         
-        <div id="user-list-report-container">
-            <h4>user list</h4>
-            <div id="user-filter-container">
-                <p>Filter by:</p>
-                <label for="filter-by-username-select">Username:</label>
-                
-                <select name="" id="filter-by-username-select">
-                    <option value="none">None</option>
-                    <option value="starts_with">Starts with</option>
-                    <option value="ends_with">Ends with</option>
-                    <option value="contains">Contains</option>
-                </select>
-                <input type="text" id="filter-by-username-input">
-
-                <label for="filter-by-firstname-select">Firstname:</label>
-                
-                <select name="" id="filter-by-firstname-select">
-                    <option value="none">None</option>
-                    <option value="starts_with">Starts with</option>
-                    <option value="ends_with">Ends with</option>
-                    <option value="contains">Contains</option>
-                </select>
-                <input type="text" id="filter-by-firstname-input">
-
-                <label for="filter-by-lastname-select">lastname:</label>
-                
-                <select name="" id="filter-by-lastname-select">
-                    <option value="none">None</option>
-                    <option value="starts_with">Starts with</option>
-                    <option value="ends_with">Ends with</option>
-                    <option value="contains">Contains</option>
-                </select>
-                <input type="text" id="filter-by-lastname-input">
+        <div id="user-list-report-container" class="border rounded-3 bg-light p-3 my-3">
+            <h4>User List</h4>
+            <hr class="w-100">
+            <div id="user-filter-container border rounded-3 bg-white">
+                <p class="fw-bold">Filter by:</p>
+                <div class="d-flex flex-row flex-wrap" >
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label class="me-2" for="filter-by-username-select">Username : </label>
+                    
+                        <select class="me-2" name="" id="filter-by-username-select">
+                            <option value="none">None</option>
+                            <option value="starts_with">Starts with</option>
+                            <option value="ends_with">Ends with</option>
+                            <option value="contains">Contains</option>
+                        </select>
+                        <input type="text" id="filter-by-username-input">
+                    </div>
     
-                <label for="filter-by-creation-date">Creation date:</label>
-                <input type="date" id="filter-by-creation-date">
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label class="me-2" for="filter-by-firstname-select">Firstname : </label>
+                    
+                        <select class="me-2" name="" id="filter-by-firstname-select">
+                            <option value="none">None</option>
+                            <option value="starts_with">Starts with</option>
+                            <option value="ends_with">Ends with</option>
+                            <option value="contains">Contains</option>
+                        </select>
+                        <input type="text" id="filter-by-firstname-input">
+                    </div>
     
-                <button id="apply-user-filter-btn">Apply User Filters</button>
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label class="me-2" for="filter-by-lastname-select">Lastname : </label>
+                    
+                        <select class="me-2" name="" id="filter-by-lastname-select">
+                            <option value="none">None</option>
+                            <option value="starts_with">Starts with</option>
+                            <option value="ends_with">Ends with</option>
+                            <option value="contains">Contains</option>
+                        </select>
+                        <input type="text" id="filter-by-lastname-input">
+                    </div>
+        
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label class="me-2" for="filter-by-creation-date">Creation Date : </label>
+                        <input type="date" id="filter-by-creation-date">
+                    </div>
+                </div>
     
-            </div>
-            <a href="/media/reports/user_list_{{user.id}}.txt" download="user_list.txt"><button id="download-user-list-btn">Download list</button></a>
-
-            <pre id="user-list">loading data...</pre>
-        </div>
-
-        <div id="file-list-report-container">
-            <h4>file list</h4>
-            <div id="file-filter-container">
-                <p>Filter by:</p>
-                <label for="filter-by-filename-select">Filename:</label>
-                
-                <select name="" id="filter-by-filename-select">
-                    <option value="none">None</option>
-                    <option value="starts_with">Starts with</option>
-                    <option value="ends_with">Ends with</option>
-                    <option value="contains">Contains</option>
-                </select>
-                <input type="text" id="filter-by-filename-input">
-    
-                <label for="filter-by-upload-date">Upload date:</label>
-                <input type="date" id="filter-by-upload-date">
-    
-                <button id="apply-file-filter-btn">Apply File Filters</button>
     
             </div>
-            <a href="/media/reports/file_list_{{user.id}}.txt" download="file_list.txt"><button id="download-file-list-btn">Download file list</button></a>
+            <button class="me-3 btn btn-success" id="apply-user-filter-btn">Apply User Filters</button>
 
-            <pre id="file-list">Loading data...</pre>
+            <a href="/media/reports/user_list_{{user.id}}.txt" download="user_list.txt"><button class="btn btn-warning my-3" id="download-user-list-btn">Download User List</button></a>
+
+            <pre class="border rounded-3 p-3 bg-white" id="user-list">Loading data...</pre>
         </div>
 
-        <div id="activity-logs-container">
-            <h4>activity logs</h4>
-            <div id="log-filter-container">
-                <h5>category filter:</h5>
-                <div id="filter-options-container">
-                    <button id="log-filter-button">Log category Filters &nbsp;&nbsp;&nbsp; <span id="log-filter-arrow">v</span></button>
-                    <ul id="log-filter-list">
-                        <li><input class="log-all" checked type="checkbox" value="all">All</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="login">Logins</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="logout">Logouts</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="registration">Registrations</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="profile_update">Profile updates</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="account_deletion">Account deletions</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="account_restore">Account restorations</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="file_upload">File uploads</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="file_edit">File edits</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="file_deletion">File deletions</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="file_restore">File restoration</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="file_view">File views</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="category_creation">Category creations</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="category_edit">Category edits</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="category_deletion">Category deletions</li>
-                        <li><input class="log-filter-option" checked type="checkbox" value="category_restore">Category restore</li>
-                    </ul>
+        <div id="file-list-report-container" class="border rounded-3 bg-light p-3 my-3">
+            <h4>File List</h4>
+            <hr class="w-100">
+            <div id="file-filter-container border rounded-3 bg-white">
+                <p class="fw-bold">Filter by:</p>
+                
+                <div class="d-flex flex-row flex-wrap">
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label for="filter-by-filename-select">Filename : </label>
+                    
+                        <select class="mx-3" name="" id="filter-by-filename-select">
+                            <option value="none">None</option>
+                            <option value="starts_with">Starts with</option>
+                            <option value="ends_with">Ends with</option>
+                            <option value="contains">Contains</option>
+                        </select>
+                        <input type="text" id="filter-by-filename-input">
+                    </div>
+        
+                    <div class="border p-3 mb-3 me-3 d-flex flex-row flex-nowrap align-items-center">
+                        <label class="me-3" for="filter-by-upload-date">Upload Date : </label>
+                        <input type="date" id="filter-by-upload-date">
+                    </div>
+                </div>
+    
+    
+            </div>
+            <div class=" ">
+                <button class="btn btn-success me-3" id="apply-file-filter-btn">Apply File Filters</button>
+
+                <a href="/media/reports/file_list_{{user.id}}.txt" download="file_list.txt"><button class="btn btn-warning my-3" id="download-file-list-btn">Download file list</button></a>
+
+            </div>
+            <pre class="border bg-white p-3" id="file-list">Loading data...</pre>
+        </div>
+
+        <div id="activity-logs-container" class="border rounded-3 bg-light p-3 my-3">
+            <h4>Activity Logs</h4>
+            <hr class="w-100">
+            <div id="log-filter-container" class="d-flex flex-row flex-wrap my-3">
+                <div class="border p-3 me-3 d-flex flex-row flex-nowrap">
+                    <h5 class="me-3">System Activity Filters : </h5>
+                    <div id="filter-options-container">
+                        <button class="bg-white" id="log-filter-button">Log Category Filters &nbsp;&nbsp;&nbsp; <span id="log-filter-arrow">▼</span></button>
+                        <ul id="log-filter-list">
+                            <li><input class="log-all" checked type="checkbox" value="all">All</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="login">Logins</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="logout">Logouts</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="registration">Registrations</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="profile_update">Profile updates</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="account_deletion">Account deletions</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="account_restore">Account restorations</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="file_upload">File uploads</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="file_edit">File edits</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="file_deletion">File deletions</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="file_restore">File restoration</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="file_view">File views</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="category_creation">Category creations</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="category_edit">Category edits</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="category_deletion">Category deletions</li>
+                            <li><input class="log-filter-option" checked type="checkbox" value="category_restore">Category restore</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <h5>Date filter</h5>
-                <input type="date" id="log-date-filter"><br>
+                <div class="border me-3 p-3 d-flex flex-row flex-nowrap">
+                    <h5 class="me-3">Date Filter : </h5>
+                    <input type="date" id="log-date-filter">
+                </div>
 
-                <button id="apply-log-filters-btn">Apply log filters</button>
             </div>
-            <a href="/media/reports/activity_logs_{{user.id}}.txt" download><button id="download-activity-logs-btn">Download activity logs</button></a>
 
-            <pre id="activity-logs"></pre>
+            <button class="btn btn-success me-3" id="apply-log-filters-btn">Apply Log Filters</button>
+            <a href="/media/reports/activity_logs_{{user.id}}.txt" download><button class="btn btn-warning my-3" id="download-activity-logs-btn">Download Activity Logs</button></a>
+
+            <pre class="border bg-white p-3" id="activity-logs"></pre>
         </div>
         
     </div>
@@ -240,12 +228,12 @@
         logFilterListBtn.addEventListener("click", function(e){
             e.stopPropagation()
             if(is_filter_shown){
-                this.children[0].textContent = 'v'
+                this.children[0].textContent = '▼'
                 logFilterList.style.height = '0'
                 is_filter_shown = false
             }else{
-                this.children[0].textContent = '^'
-                logFilterList.style.height = '150px'
+                this.children[0].textContent = '▲'
+                logFilterList.style.height = '200px'
                 is_filter_shown = true
             }
 
@@ -255,7 +243,7 @@
             e.stopPropagation()
             logFilterList.style.height = '0'
             is_filter_shown = false
-            document.querySelector("#log-filter-arrow").textContent = 'v'
+            document.querySelector("#log-filter-arrow").textContent = '▼'
         })
 
         function getLogs(category_filters, date_filter){
@@ -291,6 +279,7 @@
             document.querySelector("#user-list-report-container").style.display = 'none'
             document.querySelector("#file-list-report-container").style.display = 'none'
             document.querySelector("#activity-logs-container").style.display = 'block'
+            
             getLogs(['yes'], '')
         })
 

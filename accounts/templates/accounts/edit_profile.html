@@ -4,33 +4,57 @@
     <meta charset="UTF-8">
     <meta name="author" content="Jonathan Pizarra">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'nav/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/edit-profile.css' %}">
+
     <title>Edit Profile</title>
 </head>
-<body>
-    <div class="form">
-        {% csrf_token %}
+<body class="d-flex flex-column">
 
-        <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150" id="profile-pic">
+    {% include '../file_manager/navbar.html' with user=user %}
 
-        <br>
-        <input type="file" id="profile-img-file">
-
-        <label for="edit-username">Username</label>
-        <input type="text" id="edit-username" value={{user.username}}> <br>
-
-        <label for="edit-firstname">firstname</label>
-        <input type="text" id="edit-firstname" value={{user.first_name}}> <br>
-
-        <label for="edit-lastname">lastname</label>
-        <input type="text" id="edit-lastname" value={{user.last_name}}> <br>
-
-        <label for="edit-email">email</label>
-        <input type="text" id="edit-email" value={{user.email}}> <br>
-
-        <a href="{% url 'accounts:profile' %}">Cancel </a>
-        <button id="save-changes">Save Changes</button>
-
+    <div class="edit-container flex-grow-1">
+        <div class="edit-profile-box mx-auto my-5 p-5 border rounded-3 d-flex flex-column align-items-center">
+            <h3>Edit Profile</h3>
+            <hr class="w-100">
+            <div class="form d-flex flex-column align-items-center">
+                {% csrf_token %}
+        
+                <div class="pfp-container border rounded-circle">
+                    <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150" id="profile-pic">
+                </div>
+                <br>
+                <input type="file" id="profile-img-file" class="mb-3">
+                <hr class="w-100">
+        
+                <label for="edit-username">Username</label>
+                <input type="text" id="edit-username" value={{user.username}}> <br>
+        
+                <label for="edit-firstname">Firstname</label>
+                <input type="text" id="edit-firstname" value={{user.first_name}}> <br>
+        
+                <label for="edit-lastname">Lastname</label>
+                <input type="text" id="edit-lastname" value={{user.last_name}}> <br>
+        
+                <label for="edit-email">Email</label>
+                <input type="text" id="edit-email" value={{user.email}}> <br>
+        
+                <div class="d-flex flex-row justify-content-evenly align-items-center w-100 mt-2">
+                    <a href="{% url 'accounts:profile' %}">Cancel </a>
+                    <button class="btn btn-primary" id="save-changes">Save Changes</button>
+                </div>
+        
+            </div>
+        </div>
     </div>
+
+    
+
+    
 
     <script>
         const saveBtn = document.querySelector("#save-changes")

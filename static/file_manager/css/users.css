@@ -1,0 +1,26 @@
+
+.user-edit-container, .user-new-container, .user-details-container{
+    position: fixed;
+    top:0;
+    left:0;
+    display: none;
+    background-color: rgba(0,0,0,0.5);
+}
+.user-edit-sub-container, .user-new-sub-container, .user-details-sub-container{
+    width:600px;
+  
+}
+
+.user-details-container{
+    overflow: auto;
+}
+
+.admin-edit-user-container, .admin-add-user-container, .admin-view-user-container{
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+}
+
+.admin-edit-user-container img, .admin-add-user-container img, .admin-view-user-container img{
+    object-fit: cover;
+}

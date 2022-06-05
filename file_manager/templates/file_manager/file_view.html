@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="author" content="Jonathan Pizarra">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
     <title>File | {{file.uploaded_file.name}}</title>
     <style>
         #file-iframe{
@@ -24,7 +29,7 @@
 <body>
     <div id="file-container">
         <div id="filename">
-            <h2>file : {{file.get_filename}}</h2>
+            <h3>File : {{file.get_filename}}</h3>
         </div>
         
         <div id="loader">
@@ -35,7 +40,7 @@
             <h3>No preview available. The file is either too big or not supported</h3>
         </div>
 
-        <iframe src="" frameborder="0" id="file-iframe" sandbox="allow-same-origin"></iframe>
+        <iframe class="w-100" src="" frameborder="0" id="file-iframe" sandbox="allow-same-origin"></iframe>
     </div>
 
     <script>

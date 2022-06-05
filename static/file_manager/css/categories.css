@@ -1,0 +1,13 @@
+.category-edit-container, .category-details-container{
+    position: fixed;
+    top:0;
+    left:0;
+    display: none;
+    
+    background-color: rgba(0,0,0,0.5);
+}
+.category-edit-sub-container, .category-details-sub-container{
+    width:500px;
+
+    
+}

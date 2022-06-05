@@ -1,0 +1,42 @@
+
+
+.upload-container, .files-container{
+    min-height: 100px;
+}
+
+#filename-input{
+    width:300px;
+}
+
+.file-edit-container, .file-details-container{
+    position: fixed;
+    top:0;
+    left:0;
+    display: none;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.file-edit-sub-container, .file-details-sub-container{
+    width:500px;
+    height:500px;
+    
+}
+
+#upload-progressbar{
+    height: 2rem !important;
+}
+
+.col-titles{
+    white-space: nowrap;
+}
+
+.col-titles .btn {
+    padding: 0.2rem !important;
+}
+
+#edit-upload-progressbar{
+    height: 20px !important;
+    min-height: 20px !important;
+
+}
+

@@ -1,0 +1,16 @@
+.nav-container{
+    height:60px;
+    width:100%;
+    background-color: gray;
+
+}
+.profile-img-container{
+    width: 50px;
+    height: 50px;
+    overflow: hidden ;
+}
+
+.profile-img-container img{
+    object-fit: cover;
+}
+

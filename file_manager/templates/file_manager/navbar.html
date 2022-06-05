@@ -1,23 +1,37 @@
-<div class="nav-container">
-        
-    <img src="{{ user.profile_image.url }}" alt="user profile img" width="90" height="90">
-    <br>
 
-    <p>Hello, {{user.username}} !</p>
+<nav class="navbar navbar-expand-lg navbar-light bg-secondary">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex flex-row" href="#" >
+            <div class="profile-img-container d-flex justify-content-center align-items-center border rounded-circle">
+                <img src="{{ user.profile_image.url }}" alt="user profile img" width="50" height="50" class="d-inline-block">
+            </div>
+            <h6 class="ms-3 my-auto text-light">Hello, {{user.username}} !</h6>
+        </a>
         
-        <a href="{% url 'accounts:profile' %}">visit profile</a>
-        <button id="logout-btn">Logout </button>
-        <a href="{% url 'file_manager:index' %}">File manager</a> 
-        <a href="{% url 'file_manager:archives' %}">Archives</a>
-        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse h-100 navbar-collapse d-flex flex-row justify-content-end" id="navbarNavAltMarkup">
+            <div class="navbar-nav h-100">
 
-    {% if user.is_admin %}
-        <a href="{% url 'file_manager:admin_categories' %}">Categories</a>
-        <a href="{% url 'file_manager:admin_users' %}">Users</a>
-        <a href="{% url 'reports:index' %}">Reports</a>
-        
-    {% endif %}
-</div>
+                <a class="nav-link text-light h-100" href="{% url 'accounts:profile' %}">Profile</a>
+                <a class="nav-link text-light h-100" href="{% url 'file_manager:index' %}">File Manager</a> 
+                <a class="nav-link text-light h-100" href="{% url 'file_manager:archives' %}">Archives</a>
+                
+
+                {% if user.is_admin %}
+                    <a class="nav-link text-light h-100" href="{% url 'file_manager:admin_categories' %}">Categories</a>
+                    <a class="nav-link text-light h-100" href="{% url 'file_manager:admin_users' %}">Users</a>
+                    <a class="nav-link text-light h-100" href="{% url 'reports:index' %}">Reports</a>
+                    
+                {% endif %}
+
+                <a href="#" class="nav-link text-light" id="logout-btn">Logout </a>
+
+            </div>
+        </div>
+    </div>
+</nav>
 
 
 <script>

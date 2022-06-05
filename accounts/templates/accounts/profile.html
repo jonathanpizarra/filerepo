@@ -4,44 +4,50 @@
     <meta charset="UTF-8">
     <meta name="author" content="Jonathan Pizarra">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'nav/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/profile.css' %}">
+
     <title>Profile</title>
 
-    <style>
-        .nav-container{
-            height:90px;
-            width:100%;
-            display: flex;
-            flex-direction: row;
-            background-color: gray;
-
-        }
-    </style>
 </head>
 <body>
 
-    {% include './navbar.html' with user=user %}
+    {% include '../file_manager/navbar.html' with user=user %}
 
-    <div>
+    <div class="profile-box mx-auto mt-5 p-5 border rounded-3 d-flex flex-column align-items-center">
     
-        <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150">
+        <h3>User Profile</h3>
+        <hr>
+        <div class="pfp-container border rounded-circle">
+            <img src="{{ user.profile_image.url }}" alt="user profile img" width="150" height="150">
+        </div>
         <br>
         <p>Firstname: {{user.first_name}}</p>
         <p>Lastname: {{user.last_name}}</p>
         <p>Username: {{user.username}}</p>
         <p>Email: {{user.email}}</p>
 
+        <div class="d-flex flex-row justify-content-evenly align-items-center w-100 mt-3">
+            <button class="btn btn-danger" id="delete-account-btn">Delete account</button>
+            <a href="{% url 'accounts:edit_profile' %}">Edit Profile </a>
+            <a href="{% url 'accounts:change_password' %}">Change Password </a>
+        </div>
+
     </div>
 
     
-    <button id="delete-account-btn">Delete account</button>
-    <a href="{% url 'accounts:edit_profile' %}">Edit Profile </a>
-    <a href="{% url 'accounts:change_password' %}">Change Password </a>
+    
    
     <script>
 
         const deleteBtn = document.querySelector("#delete-account-btn");
 
-        deleteBtn.addEventListener("click", function(){
+        deleteBtn.addEventListener("click", function(e){
+            e.preventDefault()
             fetch("{% url 'accounts:delete_account' %}")
             .then(res=>res.json())
             .then(res=>{
@@ -55,14 +61,7 @@
             .catch(err=>console.log(err))
         })
 
-        const logoutBtn = document.querySelector("#logout-btn")
-        logoutBtn.addEventListener("click", function(){
-            let c = confirm("Are you sure you want to logout?")
-            if(c){
-                window.location.href = "{% url 'accounts:logout' %}"
-            }
-        })
-
+      
         
     </script>
 </body>

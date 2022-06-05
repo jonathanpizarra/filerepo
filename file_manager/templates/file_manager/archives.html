@@ -4,50 +4,48 @@
     <meta charset="UTF-8">
     <meta name="author" content="Jonathan Pizarra">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'nav/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'file_manager/css/archives.css' %}">
+
     <title>Archives</title>
 
-    <style>
-        #file-archives-container, #user-archives-container, #category-archives-container{
-            border:1px solid gray;
-            margin:1rem;
-        }
-
-        .nav-container{
-            height:90px;
-            width:100%;
-            display: flex;
-            flex-direction: row;
-            background-color: gray;
-
-        }
-    </style>
 </head>
-<body>
+<body class="bg-light">
     {% include './navbar.html' with user=user %}
 
-    <h2>Archives</h2>
+    
+    <h2 class="m-3 p-3">Archives</h2>
+    <hr class="m-3">
     {% csrf_token %}
 
     {% if user.is_admin %}
-        <div id="user-archives-container">
-            <h4>Archvied users</h4>
-            <button id="restore-selected-users-btn">restore selecteed users </button>
-            <p><span>number of selected users: </span><span id="selected-users-count">0</span></p>
+        <div id="user-archives-container" class="border rounded-3 m-3 p-3 bg-white">
+            <h4>Archvied Users</h4>
+            <hr>
+            <button class="btn btn-primary" id="restore-selected-users-btn">Restore Selected Users </button>
+            <p class="fw-bold mt-2"><span>Number of Selected Users: </span><span id="selected-users-count">0</span></p>
 
-            <table id="user-archives-table" border="">
-                <tbody id="user-archives-tbody">
+            <table id="user-archives-table" class="table table-striped table-secondary">
+                <thead>
                     <tr>
-                        <td><input type="checkbox" id="checkbox-all-users"></td>
-                        <td>Username</td>
-                        <td>Firstname</td>
-                        <td>Lastname</td>
-                        <td>Email</td>
-                        <td>Actions</td>
+                        <th><input type="checkbox" id="checkbox-all-users"></th>
+                        <th>Username</th>
+                        <th>Firstname</th>
+                        <th>Lastname</th>
+                        <th>Email</th>
+                        <th>Actions</th>
                     </tr>
+                </thead>
+                <tbody id="user-archives-tbody">
+                    
     
                     {% if user_archives.count == 0 %}
                         <tr id="no-files">
-                            <td colspan="6">no archived files</td>
+                            <td colspan="6" class="text-center">No Archived Users</td>
                         </tr>
                     {% else %}
                         {% for u in user_archives %}
@@ -58,7 +56,7 @@
                                 <td class="col-lastname">{{u.last_name}}</td>
                                 <td class="col-email">{{u.email}}</td>
                                 <td class='col-user-actions'>
-                                    <button class="restore-user-btn" data-pk="{{u.id}}">Restore</button>
+                                    <button class="restore-user-btn btn btn-success" data-pk="{{u.id}}">Restore</button>
                                 </td>
                             </tr>
     
@@ -69,12 +67,13 @@
             </table>
         </div>
 
-        <div id="category-archives-container">
-            <h4>Archvied categories</h4>
-            <button id="restore-selected-categories-btn">restore selecteed categories </button>
-            <p><span>number of selected categories: </span><span id="selected-categories-count">0</span></p>
+        <div id="category-archives-container" class="border rounded-3 m-3 p-3 bg-white">
+            <h4>Archvied Categories</h4>
+            <hr>
+            <button class="btn btn-primary" id="restore-selected-categories-btn">Restore Selecteed Categories </button>
+            <p class="fw-bold mt-2" ><span>Number of Selected Categories: </span><span id="selected-categories-count">0</span></p>
 
-            <table id="category-archives-table" border="">
+            <table id="category-archives-table" class="table table-striped table-secondary">
                 <tbody id="category-archives-tbody">
                     <tr>
                         <td><input type="checkbox" id="checkbox-all-categories"></td>
@@ -85,7 +84,7 @@
     
                     {% if category_archives.count == 0 %}
                         <tr id="no-categories">
-                            <td colspan="6">no archived categories</td>
+                            <td colspan="6" class="text-center">No Archived Categories</td>
                         </tr>
                     {% else %}
                         {% for u in category_archives %}
@@ -94,7 +93,7 @@
                                 <td class="col-category-name">{{u.name}}</td>
                                 <td class="col-description">{{u.description}}</td>
                                 <td class='col-category-actions'>
-                                    <button class="restore-category-btn" data-pk="{{u.id}}">Restore</button>
+                                    <button class="restore-category-btn btn btn-success" data-pk="{{u.id}}">Restore</button>
                                 </td>
                             </tr>
     
@@ -110,12 +109,13 @@
     {% endif %}
 
 
-    <div id="file-archives-container">
-        <h4>Archived files</h4>
-        <button id="restore-selected-files-btn">restore selecteed files </button>
-        <p><span>number of selected files: </span><span id="selected-files-count">0</span></p>
+    <div id="file-archives-container" class="border rounded-3 m-3 p-3 bg-white">
+        <h4>Archived Files</h4>
+        <hr>
+        <button class="btn btn-primary" id="restore-selected-files-btn">Restore Selecteed Files </button>
+        <p class="fw-bold mt-2" ><span>Number of Selected Files: </span><span id="selected-files-count">0</span></p>
 
-        <table id="file-archives-table" border="">
+        <table id="file-archives-table" class="table table-striped table-secondary">
             <tbody id="file-archives-tbody">
                 <tr>
                     <td><input type="checkbox" id="checkbox-all-files"></td>
@@ -129,7 +129,7 @@
 
                 {% if file_archives.count == 0 %}
                     <tr id="no-files">
-                        <td colspan="6">no archived files</td>
+                        <td colspan="6" class="text-center">No Archived Files</td>
                     </tr>
                 {% else %}
                     {% for f in file_archives %}
@@ -141,7 +141,7 @@
                             <td class="col-uploader">{{f.uploader.username}}</td>
                             <td class="col-upload-date">{{f.upload_date|date:"m/d/Y, H:i:s"}}</td>
                             <td class='col-file-actions'>
-                                <button class="restore-file-btn" data-pk="{{f.id}}">Restore</button>
+                                <button class="restore-file-btn btn btn-success" data-pk="{{f.id}}">Restore</button>
                             </td>
                         </tr>
 

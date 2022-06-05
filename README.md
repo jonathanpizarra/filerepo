@@ -14,3 +14,15 @@ Created using Django 4 and Bootstrap 5
 - The admin can generate logs of the system.
 
 
+### media folder contents 
+
+- files folder
+- profile_images folder
+- reports folder
+
+
+### TODO :
+
+- Add option to download reports/logs in pdf format
+- Change alerts into something better like SweetAlert
+

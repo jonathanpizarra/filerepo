@@ -1,0 +1,45 @@
+
+
+
+#user-list-report-container{
+    display: block; 
+}
+#file-list-report-container, #user-list-report-container{
+    display: none ;
+}
+pre{
+    overflow-x: auto;
+}
+#log-filter-list{
+    list-style-type: none;
+    overflow-y: auto;
+    height:0;
+    border:1px solid gray;
+    display: inline-block;
+}
+#filter-options-container{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border:1px solid gray;
+    width:200px;
+}
+
+#log-filter-button{
+    height: 2.5rem !important;
+}
+#log-filter-list{
+    position: absolute;
+    top:2.5rem;
+    left:0;
+    transition: height 0.2s;
+    margin:0;
+    padding:0;
+    width: 100%;
+    background-color: #eee;
+}
+
+.log-btn{
+    border-radius: 2rem !important;
+    margin-right: 1rem;
+}

@@ -243,7 +243,15 @@ def save_profile_changes(request):
     })
 
 def change_password(request):
-    return render(request, 'accounts/change_password.html')
+    id = request.session.get('user_id', '')
+    if id == '':
+        return redirect('accounts:login')
+    
+    user = User.objects.get(pk=id)
+    context = {
+        'user' : user
+    }
+    return render(request, 'accounts/change_password.html', context)
 
 def save_new_password(request):
     id = request.session.get('user_id', '')
