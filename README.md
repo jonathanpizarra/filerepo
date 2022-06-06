@@ -26,4 +26,4 @@ Created using Django 4 and Bootstrap 5
 
 - Add option to download reports/logs in pdf format
 - Change alerts into something better like SweetAlert
-
+- Add a proper admin dashboard?
